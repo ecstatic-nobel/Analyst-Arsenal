@@ -32,6 +32,9 @@ python opendir_certstream.py
 ```
 **Note**: Any URLs in the queue will be lost once the program stops.  
 
+**Download**
+![opendir_certstream - Download](https://github.com/leunammejii/analyst_arsenal/blob/master/static/assets/opendir_certstream_download.png)  
+
 **opendir_urlscan**   
 The following command will:  
 - Make requests to the domains retrieved from urlscan.io  
@@ -40,7 +43,7 @@ The following command will:
 3 positional arguments needed:  
 - **Query Type**     : automatic, manual, certstream, openphish, phishtank, twitter, urlhaus  
 - **Delta**          : Number of days back to search (GMT)  
-- **File Extension** : 7z, apk, bat, bz, bz2, crypt, dll, doc, docx, exe, gz, hta, iso, jar, json, lnk, ppt, ps1, py, rar, sfx, sh, tar, vb, vbs, xld, xls, xlsx, zip  
+- **File Extension** : 7z, apk, bat, bz, bz2, crypt, dll, doc, docx, exe, gz, hta, iso, jar, json, lnk, ppt, ps1, py, rar, sfx, sh, tar, vb, vbs, xld, xls, xlsx, zip   
 
 Optional arguments:  
 - **Dry Run** : Perform a test run to see what would be downloaded  
@@ -49,6 +52,15 @@ Optional arguments:
 python opendir_urlscan.py <QUERY_TYPE> <DELTA> <FILE_EXTENSION> [--dry-run] [--exclude=CSV]
 ```
 **Note**: If the path is a file, it will be downloaded regardless of whether it's an open directory.  
+
+**Help**
+![opendir_urlscan - Help](https://github.com/leunammejii/analyst_arsenal/blob/master/static/assets/opendir_urlscan_help.png)  
+
+**Dry Run**
+![opendir_urlscan - Dry Run](https://github.com/leunammejii/analyst_arsenal/blob/master/static/assets/opendir_urlscan_dryrun.png)  
+
+**Download**
+![opendir_urlscan - Download](https://github.com/leunammejii/analyst_arsenal/blob/master/static/assets/opendir_urlscan_download.png)  
 
 #### Things to know  
 - Be responsible.  
