@@ -1,4 +1,4 @@
-# [analyst_arsenal (A²)]
+# [Analyst Arsenal (A²)™]
 ##### A project full of custom tools for analysts to continue fighting the good fight.  
 
 #### Description  
