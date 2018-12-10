@@ -32,9 +32,6 @@ python opendir_certstream.py
 ```
 **Note**: Any URLs in the queue will be lost once the program stops.  
 
-**Download**
-![opendir_certstream - Download](https://github.com/leunammejii/analyst_arsenal/blob/master/static/assets/opendir_certstream_download.png)  
-
 **opendir_urlscan**   
 The following command will:  
 - Make requests to the domains retrieved from urlscan.io  
