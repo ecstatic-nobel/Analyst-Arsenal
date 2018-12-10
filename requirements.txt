@@ -1,0 +1,9 @@
+certstream==1.10
+entropy==0.10
+python_Levenshtein==0.12.0
+PyYAML==3.13
+requests
+termcolor==1.1.0
+tld==0.7.9
+tqdm==4.19.4
+websocket-client==0.48.0
