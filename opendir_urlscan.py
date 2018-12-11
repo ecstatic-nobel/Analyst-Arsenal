@@ -40,6 +40,7 @@ sys.path.insert(0, script_path)
 import requests
 from termcolor import colored, cprint
 import tqdm
+import yaml
 
 
 # Parse Arguments
@@ -94,36 +95,20 @@ queries = {
     "urlhaus"    : "task.source%3Aurlhaus"
 }
 
-archives = {
-    "7z"   : "application/x-7z-compressed",
-    "gz"   : "application/x-gzip",
-    "rar"  : "application/x-rar",
-    "tar"  : "donotcheck",
-    "zip"  : "application/zip"
-}
+with open("external.yaml", "r") as f:
+    external = yaml.safe_load(f)
 
-files = {
-    "apk"  : "application/java-archive",
-    "bat"  : "donotcheck",
-    "dll"  : "application/x-dosexec",
-    "doc"  : "application/msword",
-    "docx" : "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-    "exe"  : "application/x-dosexec",
-    "hta"  : "donotcheck",
-    "html" : "donotcheck",
-    "iso"  : "application/octet-stream",
-    "jar"  : "application/java-archive",
-    "json" : "donotcheck",
-    "lnk"  : "application/octet-stream",
-    "ppt"  : "application/vnd.ms-powerpoint",
-    "ps1"  : "donotcheck",
-    "py"   : "donotcheck",
-    "sh"   : "donotcheck",
-    "vb"   : "donotcheck",
-    "vbs"  : "donotcheck",
-    "xls"  : "application/vnd.ms-excel",
-    "xlsx" : "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-}
+if external["archives"] is not None:
+    archives = external["archives"]
+else:
+    print(colored("At least one extension is required for 'archives'.", "red", attrs=["bold"]))
+    exit()
+
+if external["files"] is not None:
+    files = external["files"]
+else:
+    print(colored("At least one extension is required for 'files'.", "red", attrs=["bold"]))
+    exit()
 
 extensions = {}
 extensions.update(archives)
