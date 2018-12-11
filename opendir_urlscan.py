@@ -70,50 +70,6 @@ args = parser.parse_args()
 if args.dry_run:
     print(colored("Starting dry run...\n", "yellow", attrs=["bold"]))
 
-# Print summary of what's about to be checked
-print("Summary:")
-print("    query_type     : {}".format(args.query_type))
-print("    delta          : {}".format(args.delta))
-print("    file_extension : {}".format(args.file_extension))
-
-if args.exclude:
-    exclusions = args.exclude.split(',')
-    print("    exclusions     : {}".format(exclusions))
-
-print("")
-
-queries = {
-    "automatic"  : "task.method%3Aautomatic",
-    "manual"     : "task.method%3Amanual",
-    "certstream" : "(task.source%3Acertstream-idn OR \
-                    task.source%3Acertstream-suspicious)",
-    "openphish"  : "task.source%3Aopenphish",
-    "phishtank"  : "task.source%3Aphishtank",
-    "twitter"    : "(task.source%3Atwitter OR \
-                    task.source%3Atwitter_illegalFawn OR \
-                    task.source%3Atwitter_phishingalert)",
-    "urlhaus"    : "task.source%3Aurlhaus"
-}
-
-with open("external.yaml", "r") as f:
-    external = yaml.safe_load(f)
-
-if external["archives"] is not None:
-    archives = external["archives"]
-else:
-    print(colored("At least one extension is required for 'archives'.", "red", attrs=["bold"]))
-    exit()
-
-if external["files"] is not None:
-    files = external["files"]
-else:
-    print(colored("At least one extension is required for 'files'.", "red", attrs=["bold"]))
-    exit()
-
-extensions = {}
-extensions.update(archives)
-extensions.update(files)
-
 def main():
     """ """
     qtype = args.query_type.lower()
@@ -337,4 +293,48 @@ def main():
     return
 
 if __name__ == "__main__":
+    # Print summary of what's about to be checked
+    print("Summary:")
+    print("    query_type     : {}".format(args.query_type))
+    print("    delta          : {}".format(args.delta))
+    print("    file_extension : {}".format(args.file_extension))
+
+    if args.exclude:
+        exclusions = args.exclude.split(',')
+        print("    exclusions     : {}".format(exclusions))
+
+    print("")
+
+    queries = {
+        "automatic"  : "task.method%3Aautomatic",
+        "manual"     : "task.method%3Amanual",
+        "certstream" : "(task.source%3Acertstream-idn OR \
+                        task.source%3Acertstream-suspicious)",
+        "openphish"  : "task.source%3Aopenphish",
+        "phishtank"  : "task.source%3Aphishtank",
+        "twitter"    : "(task.source%3Atwitter OR \
+                        task.source%3Atwitter_illegalFawn OR \
+                        task.source%3Atwitter_phishingalert)",
+        "urlhaus"    : "task.source%3Aurlhaus"
+    }
+
+    with open("external.yaml", "r") as f:
+        external = yaml.safe_load(f)
+
+    if external["archives"] is not None:
+        archives = external["archives"]
+    else:
+        print(colored("At least one extension is required for 'archives'.", "red", attrs=["bold"]))
+        exit()
+
+    if external["files"] is not None:
+        files = external["files"]
+    else:
+        print(colored("At least one extension is required for 'files'.", "red", attrs=["bold"]))
+        exit()
+
+    extensions = {}
+    extensions.update(archives)
+    extensions.update(files)
+    
     main()
