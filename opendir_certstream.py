@@ -228,9 +228,15 @@ if __name__ == "__main__":
 
         if external["archives"] is not None:
             suspicious["archives"] = external["archives"]
+        else:
+            print(colored("At least one extension is required for 'archives'.", "red", attrs=["bold"]))
+            exit()
 
         if external["files"] is not None:
             suspicious["files"] = external["files"]
+        else:
+            print(colored("At least one extension is required for 'files'.", "red", attrs=["bold"]))
+            exit()
 
     QueueManager()
     certstream.listen_for_events(callback, url=certstream_url)
