@@ -147,7 +147,7 @@ def main():
             if len(files) > 0:
                 urls.append(url)
 
-    for url in urls:
+    for url in sorted(set(urls), key=urls.index):
         # Check if the current URL has already been redirected to
         if "redirect" in vars() and redirect == url:
             del redirect
@@ -262,7 +262,7 @@ def main():
                             "{}".format("{} (Responded with no Content-Type)".format(colored(url, "green", attrs=["underline", "bold"]))))
 
                     if args.dry_run:
-                        continue
+                        break
 
                     try:
                         os.mkdir("./InterestingFile/{}".format(domain.split(":")[0]))
@@ -278,7 +278,7 @@ def main():
                             "--no-parent",
                             url
                         ])
-                        continue
+                        break
                     except:
                         continue
 
@@ -301,7 +301,7 @@ def main():
                         "{}".format("{} ({} found)".format(colored(url, "green", attrs=["underline", "bold"]), ext)))
 
                 if args.dry_run:
-                    continue
+                    break
 
                 try:
                     os.mkdir("./InterestingFile/{}".format(domain.split(":")[0]))
@@ -317,7 +317,7 @@ def main():
                         "--no-parent",
                         url
                     ])
-                    continue
+                    break
                 except:
                     continue
 
