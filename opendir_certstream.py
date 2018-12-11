@@ -1,4 +1,21 @@
-#!/usr/bin/python
+#!/opt/splunk/bin/python
+"""
+Description:
+- Stream CT logs via Certstream
+- Score and add suspicious domains to a queue while other domains continue to be scored
+- Simultaneously make requests to the domains in the queue to search for predefined file extensions
+- Recursively download the site when an open directory is found hosting a file with a particular extension
+
+Credit: https://github.com/x0rz/phishing_catcher
+
+Usage:
+
+```
+python opendir_certstream.py
+```
+
+Debugger: open("/tmp/splunk_script.txt", "a").write("{}: <MSG>\n".format(<VAR>))
+"""
 
 import os
 import Queue

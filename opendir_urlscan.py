@@ -1,4 +1,30 @@
 #!/opt/splunk/bin/python
+"""
+Description:
+- Make requests to the domains retrieved from urlscan.io
+- Recursively download the site when an open directory hosting a file with the desired file extension
+
+3 positional arguments needed:
+
+- Query Type : automatic, manual, certstream, openphish, phishtank, twitter, urlhaus
+- Delta : Number of days back to search (GMT)
+- File Extension : 7z, apk, bat, bz, bz2, crypt, dll, doc, docx, exe, gz, hta, iso, jar, json, lnk, ppt, ps1, py, rar, sfx, sh, tar, vb, vbs, xld, xls, xlsx, zip
+
+Optional arguments:
+
+- Dry Run : Perform a test run to see what would be downloaded
+- Exclude : A comma-separated list of domains to not download content from (ex. 'google.com,bing.com')
+
+Credit: https://github.com/ninoseki/miteru
+
+Usage:
+
+```
+python opendir_urlscan.py <QUERY_TYPE> <DELTA> <FILE_EXTENSION> [--dry-run] [--exclude=CSV]
+```
+
+Debugger: open("/tmp/splunk_script.txt", "a").write("{}: <MSG>\n".format(<VAR>))
+"""
 
 import argparse
 from collections import OrderedDict
