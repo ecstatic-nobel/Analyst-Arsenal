@@ -6,35 +6,35 @@ archives:
 # Add your own file extensions here e.g.:
 #    '.7z':
 #    '.zip':
-    '.7z':
-    '.gz':
-    '.rar':
-    '.tar':
-    '.zip':
+    '7z': 'application/x-7z-compressed'
+    'gz': 'application/x-gzip'
+    'rar': 'application/x-rar'
+    'tar': 'donotcheck'
+    'zip': 'application/zip'
 
 files:
 # Add your own file extensions here e.g.:
 #    '.exe':
 #    '.ps1':
-    '.apk':
-    '.bat':
-    '.dll':
-    '.doc':
-    '.docx':
-    '.exe':
-    '.hta':
-    '.iso':
-    '.jar':
-    '.json':
-    '.lnk':
-    '.ppt':
-    '.ps1':
-    '.py':
-    '.sh':
-    '.vb':
-    '.vbs':
-    '.xls':
-    '.xlsx':
+    'apk': 'application/java-archive'
+    'bat': 'donotcheck'
+    'dll': 'application/x-dosexec'
+    'doc': 'application/msword'
+    'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    'exe': 'application/x-dosexec'
+    'hta': 'donotcheck'
+    'iso': 'application/octet-stream'
+    'jar': 'application/java-archive'
+    'json': 'donotcheck'
+    'lnk': 'application/octet-stream'
+    'ppt': 'application/vnd.ms-powerpoint'
+    'ps1': 'donotcheck'
+    'py': 'donotcheck'
+    'sh': 'donotcheck'
+    'vb': 'donotcheck'
+    'vbs': 'donotcheck'
+    'xls': 'application/vnd.ms-excel'
+    'xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
 
 keywords:
 # Add your own keywords here or override the score
