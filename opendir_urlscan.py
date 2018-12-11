@@ -109,9 +109,9 @@ def main():
             continue
     
         if "files" in result.keys():
-            files = [x for x in result["files"] if x["mimeType"].startswith(extensions[ext])]
+            result_files = [x for x in result["files"] if x["mimeType"].startswith(extensions[ext])]
 
-            if len(files) > 0:
+            if len(result_files) > 0:
                 urls.append(url)
 
     for url in sorted(set(urls), key=urls.index):
