@@ -46,3 +46,12 @@ tlds:
 # Add your own TLDs here, e.g.:
 #    '.nu':
 #    '.se':
+
+queries:
+    'automatic' : 'task.method%3Aautomatic'
+    'manual' : 'task.method%3Amanual'
+    'certstream' : '(task.source%3Acertstream-idn OR task.source%3Acertstream-suspicious)'
+    'openphish' : 'task.source%3Aopenphish'
+    'phishtank' : 'task.source%3Aphishtank'
+    'twitter' : '(task.source%3Atwitter OR task.source%3Atwitter_illegalFawn OR task.source%3Atwitter_phishingalert)'
+    'urlhaus' : 'task.source%3Aurlhaus'

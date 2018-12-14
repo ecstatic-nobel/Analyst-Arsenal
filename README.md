@@ -9,7 +9,9 @@ After catching malicious phishing domain names using [certstream](https://certst
 Search for specific filetypes submitted to [urlscan.io](https://urlscan.io/) and recursively download the webpage if predefined file extensions are found.  
 
 #### Prerequisites  
+- Ubuntu 18.04+ (should work on other Linux distros)  
 - Python 2.7.14  
+- Torsocks (optional: used with flag `--tor`)  
 
 #### Setup  
 1. Open a terminal and run the following command:  
@@ -27,8 +29,12 @@ The following command will:
 - Score and add suspicious domains to a queue while other domains continue to be scored  
 - Simultaneously make requests to the domains in the queue to search for predefined file extensions  
 - Recursively download the site when an open directory is found hosting a file with a particular extension  
+
+Optional arguments:  
+- **--timeout** : Set time to wait for a connection  
+- **--tor** : Download files via the Tor network  
 ```bash
-python opendir_certstream.py
+python opendir_certstream.py [--timeout] [--tor]
 ```
 **Note**: Any URLs in the queue will be lost once the program stops.  
 
@@ -43,10 +49,12 @@ The following command will:
 - **File Extension** : 7z, apk, bat, bz, bz2, crypt, dll, doc, docx, exe, gz, hta, iso, jar, json, lnk, ppt, ps1, py, rar, sfx, sh, tar, vb, vbs, xld, xls, xlsx, zip   
 
 Optional arguments:  
-- **Dry Run** : Perform a test run to see what would be downloaded  
-- **Exclude** : A comma-separated list of domains to not download content from (ex. 'google.com,bing.com')  
+- **--dryrun** : Perform a test run to see what would be downloaded  
+- **--exclude** : A comma-separated list of domains to not download content from (ex. 'google.com,bing.com')  
+- **--timeout** : Set time to wait for a connection  
+- **--tor** : Download files via the Tor network  
 ```bash
-python opendir_urlscan.py <QUERY_TYPE> <DELTA> <FILE_EXTENSION> [--dry-run] [--exclude=CSV]
+python opendir_urlscan.py <QUERY_TYPE> <DELTA> <FILE_EXTENSION> [--dry-run] [--exclude=CSV] [--timeout] [--tor]
 ```
 **Note**: If the path is a file, it will be downloaded regardless of whether it's an open directory.  
 
@@ -60,6 +68,8 @@ python opendir_urlscan.py <QUERY_TYPE> <DELTA> <FILE_EXTENSION> [--dry-run] [--e
 ![opendir_urlscan - Download](https://github.com/leunammejii/analyst_arsenal/blob/master/static/assets/opendir_urlscan_download.png)  
 
 #### Things to know  
-- Be responsible.  
+- Be responsible!!!  
+- Downloads via Tor happen over **127.0.0.1:9050**  
+- These scripts **will not** check Torsocks settings  
 
 Please fork, create merge requests, and help make this better.  
