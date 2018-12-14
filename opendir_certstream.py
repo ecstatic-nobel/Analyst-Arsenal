@@ -119,7 +119,7 @@ class QueueManager(object):
 
                     tqdm.tqdm.write(
                         "[*] Download  : "
-                        "{}".format(
+                        "{} ('Index of ' found)".format(
                             colored(url, "green", attrs=["underline", "bold"]))
                     )
 
@@ -139,7 +139,6 @@ class QueueManager(object):
                             "--no-parent",
                             url
                         ])
-                        exit(0)
                         break
                     except Exception as err:
                         print("[!] Error    : {}".format(
