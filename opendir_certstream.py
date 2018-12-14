@@ -6,7 +6,16 @@ Description:
 - Simultaneously make requests to the domains in the queue to search for predefined file extensions
 - Recursively download the site when an open directory is found hosting a file with a particular extension
 
+Optional arguments:
+- --timeout : Set time to wait for a connection
+- --tor     : Download files via the Tor network
+
 Credit: https://github.com/x0rz/phishing_catcher
+
+Resources:
+    http://docs.python-requests.org/en/master/user/advanced/#proxies
+    https://gist.github.com/jefftriplett/9748036
+    https://ec.haxx.se/libcurl-proxies.html
 
 Usage:
 
@@ -17,6 +26,7 @@ python opendir_certstream.py
 Debugger: open("/tmp/splunk_script.txt", "a").write("{}: <MSG>\n".format(<VAR>))
 """
 
+import argparse
 import os
 import Queue
 import re
@@ -39,12 +49,20 @@ import yaml
 from confusables import unconfuse
 
 
-certstream_url = "wss://certstream.calidog.io"
-pbar           = tqdm.tqdm(desc="certificate_update", unit="cert")
-uagent         = "Mozilla/5.0 (Windows NT 6.3; Trident/7.0; rv:11.0) like Gecko"
-
-global url_queue
-url_queue = Queue.Queue()
+# Parse Arguments
+parser = argparse.ArgumentParser(description="Attempt to detect phishing kits and open directories via Certstream.")
+parser.add_argument("--timeout",
+                    dest="timeout",
+                    type=int,
+                    default=30,
+                    required=False,
+                    help="Set time to wait for a connection")
+parser.add_argument("--tor",
+                    dest="tor",
+                    action="store_true",
+                    required=False,
+                    help="Download files over the Tor network")
+args = parser.parse_args()
 
 # hxxp://sebastiandahlgren[.]se/2014/06/27/running-a-method-as-a-background-thread-in-python/
 class QueueManager(object):
@@ -75,10 +93,15 @@ class QueueManager(object):
                 url   = url_queue.get()
                 tqdm.tqdm.write(
                     "[*] Session   : "
-                    "{}".format(colored(url, "blue")))
+                    "{}".format(colored(url, "blue"))
+                )
                 try:
-                    resp = requests.get(url, headers={"User-Agent": uagent}, timeout=3.1)
-                except:
+                    resp = requests.get(url,
+                                        proxies=proxies,
+                                        headers={"User-Agent": uagent},
+                                        timeout=timeout,
+                                        allow_redirects=True)
+                except Exception as err:
                     continue
 
                 if not (resp.status_code == 200 and "Index of " in resp.content):
@@ -96,15 +119,18 @@ class QueueManager(object):
 
                     tqdm.tqdm.write(
                         "[*] Download  : "
-                        "{}".format(colored(url, "green", attrs=["underline", "bold"])))
+                        "{}".format(
+                            colored(url, "green", attrs=["underline", "bold"]))
+                    )
 
                     try:
                         subprocess.call([
+                            "{}".format(torsocks),
                             "wget",
                             "--execute=robots=off",
                             "--tries=2",
                             "--no-clobber",
-                            "--timeout=3.1",
+                            "--timeout={}".format(timeout),
                             "--waitretry=0",
                             "--directory-prefix=./{}/".format(directory),
                             "--content-disposition",
@@ -115,7 +141,10 @@ class QueueManager(object):
                         ])
                         exit(0)
                         break
-                    except:
+                    except Exception as err:
+                        print("[!] Error    : {}".format(
+                            colored(err, "red", attrs=["bold"])
+                        ))
                         continue
             time.sleep(self.interval)        
 
@@ -178,8 +207,13 @@ def score_domain(domain):
 
     try:
         res = get_tld(domain, as_object=True, fail_silently=True, fix_protocol=True)
-        domain = '.'.join([res.subdomain, res.domain])
-    except Exception:
+
+        if res is not None:
+            domain = '.'.join([res.subdomain, res.domain])
+    except Exception as err:
+        print("[!] Error    : {}".format(
+            colored(err, "red", attrs=["bold"])
+        ))
         pass
 
     score += int(round(entropy.shannon_entropy(domain)*50))
@@ -210,8 +244,23 @@ def score_domain(domain):
 
     return score
 
-if __name__ == "__main__":
+def main():
+    """ """
+    global uagent
+    uagent         = "Mozilla/5.0 (Windows NT 6.3; Trident/7.0; rv:11.0) like Gecko"
+    global timeout
+    timeout        = args.timeout
+    certstream_url = "wss://certstream.calidog.io"
+    global url_queue
+    url_queue      = Queue.Queue()
+
+    # Print start messages
+    show_summary()
+    show_network(uagent, timeout)
+
+    # Read suspicious.yaml and external.yaml
     with open("suspicious.yaml", "r") as f:
+        global suspicious
         suspicious = yaml.safe_load(f)
 
     with open("external.yaml", "r") as f:
@@ -238,5 +287,58 @@ if __name__ == "__main__":
             print(colored("At least one extension is required for 'files'.", "red", attrs=["bold"]))
             exit()
 
+    # Start queue and listen for events via Certstream
+    print(colored("Starting queue...\n", "yellow", attrs=["bold"]))
     QueueManager()
+
+    global pbar
+    pbar = tqdm.tqdm(desc="certificate_update", unit="cert")
     certstream.listen_for_events(callback, url=certstream_url)
+
+def show_summary():
+    """Print summary of arguments selected"""
+
+    print("Summary:")
+    print("    timeout : {}".format(args.timeout))
+    print("    tor     : {}\n".format(args.tor))
+    return
+
+def show_network(uagent, timeout):
+    """Select network to use, get IP address, and print message"""
+    global torsocks
+    global proxies
+    if args.tor:
+        ip_type  = "Tor"
+        proxies  = {
+            "http": "socks5h://127.0.0.1:9050",
+            "https": "socks5h://127.0.0.1:9050"
+        }
+        torsocks = "torsocks"
+    else:
+        ip_type  = "Original"
+        proxies  = {}
+        torsocks = ""
+
+    try:
+        global requested_ip
+        requested_ip = requests.get("https://api.ipify.org",
+                                     proxies=proxies,
+                                     headers={"User-Agent": uagent},
+                                     timeout=timeout,
+                                     allow_redirects=True).content
+    except Exception as err:
+        print("[!!] Error   : {}".format(
+            colored(err, "red", attrs=["bold"])
+        ))
+        exit()
+
+    print(colored("Getting IP Address...", "yellow", attrs=["bold"]))
+    if args.tor:
+        obfuscated_ip = ".".join(["XXX.XXX.XXX", requested_ip.split(".")[:-1][0]])
+        print(colored("{} IP: {}\n".format(ip_type, obfuscated_ip), "yellow", attrs=["bold"]))
+    else:
+        print(colored("{} IP: {}\n".format(ip_type, requested_ip), "yellow", attrs=["bold"]))
+    return
+
+if __name__ == "__main__":
+    main()
