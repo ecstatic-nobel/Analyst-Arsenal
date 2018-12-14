@@ -120,13 +120,15 @@ class QueueManager(object):
                     tqdm.tqdm.write(
                         "[*] Download  : "
                         "{} ('Index of ' found)".format(
-                            colored(url, "green", attrs=["underline", "bold"]))
+                            colored(url)
+                        )
                     )
 
                     try:
                         subprocess.call([
                             "{}".format(torsocks),
                             "wget",
+                            "--quiet",
                             "--execute=robots=off",
                             "--tries=2",
                             "--no-clobber",
@@ -139,6 +141,11 @@ class QueueManager(object):
                             "--no-parent",
                             url
                         ])
+                        tqdm.tqdm.write(
+                            "[*] Complete  : "
+                            "{}".format(
+                                colored(url, "green", attrs=["underline", "bold"]))
+                        )
                         break
                     except Exception as err:
                         print("[!] Error    : {}".format(

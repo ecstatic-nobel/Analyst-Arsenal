@@ -195,7 +195,7 @@ def main():
                         continue
 
                     print("[*] Download : {} ('Index of ' found)".format(
-                        colored(url, "green", attrs=["underline", "bold"])
+                        colored(url, "green")
                     ))
 
                     if args.dry_run:
@@ -209,6 +209,7 @@ def main():
                         subprocess.call([
                             "{}".format(torsocks),
                             "wget",
+                            "--quiet",
                             "--execute=robots=off",
                             "--tries=2",
                             "--no-clobber",
@@ -221,6 +222,9 @@ def main():
                             "--no-parent",
                             url
                         ])
+                        print("[*] Complete : {}".format(
+                            colored(url, "green", attrs=["underline", "bold"])
+                        ))
                         break
                     except Exception as err:
                         print("[!] Error    : {}".format(
@@ -241,11 +245,11 @@ def main():
                     if resp.url != url:
                         redirect = resp.url
                         print("[*] Redirect : {} (Responded with no Content-Type)".format(
-                            colored(redirect, "green", attrs=["underline", "bold"])
+                            colored(redirect, "green")
                         ))
                     else:
                         print("[*] Download : {} (Responded with no Content-Type)".format(
-                            colored(url, "green", attrs=["underline", "bold"])
+                            colored(url, "green")
                         ))
 
                     if args.dry_run:
@@ -257,6 +261,7 @@ def main():
                         subprocess.call([
                             "{}".format(torsocks),
                             "wget",
+                            "--quiet",
                             "--execute=robots=off",
                             "--tries=2",
                             "--no-clobber",
@@ -267,6 +272,9 @@ def main():
                             "--no-parent",
                             url
                         ])
+                        print("[*] Complete : {}".format(
+                            colored(url, "green", attrs=["underline", "bold"])
+                        ))
                         break
                     except Exception as err:
                         print("[!] Error    : {}".format(
@@ -286,12 +294,12 @@ def main():
                 if resp.url != url:
                     redirect = resp.url
                     print("[*] Redirect : {} ({} found)".format(
-                        colored(redirect, "green", attrs=["underline", "bold"]),
+                        colored(redirect, "green"),
                         ext
                     ))
                 else:
                     print("[*] Download : {} ({} found)".format(
-                        colored(url, "green", attrs=["underline", "bold"]),
+                        colored(url, "green"),
                         ext
                     ))
 
@@ -304,6 +312,7 @@ def main():
                     subprocess.call([
                         "{}".format(torsocks),
                         "wget",
+                        "--quiet",
                         "--execute=robots=off",
                         "--tries=2",
                         "--no-clobber",
@@ -314,6 +323,9 @@ def main():
                         "--no-parent",
                         url
                     ])
+                    print("[*] Complete : {}".format(
+                        colored(url, "green", attrs=["underline", "bold"])
+                    ))
                     break
                 except Exception as err:
                     print("[!] Error    : {}".format(
