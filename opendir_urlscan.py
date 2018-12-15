@@ -144,7 +144,7 @@ def main():
                 break
 
         if skip_domain:
-            print("[*] Skipping : {}".format(colored(url, "yellow")))
+            print("[*] Excluded : {}".format(colored(url, "red")))
             continue
 
         print("[*] Original : {}".format(colored(url, "cyan")))
