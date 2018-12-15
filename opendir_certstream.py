@@ -120,7 +120,7 @@ class QueueManager(object):
                     tqdm.tqdm.write(
                         "[*] Download  : "
                         "{} ('Index of ' found)".format(
-                            colored(url)
+                            colored(url, "green")
                         )
                     )
 
