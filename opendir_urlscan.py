@@ -132,12 +132,19 @@ def main():
             continue
 
         # Split URL into parts
-        split_url = url.split("/")
-        protocol  = split_url[0]
-        domain    = split_url[2]
+        split_url   = url.split("/")
+        protocol    = split_url[0]
+        domain      = split_url[2]
+        skip_domain = False
         
         # Skip exclusions
-        if args.exclude and domain in exclusions:
+        for exclusion in exclusions:
+            if domain == exclusion or domain.endswith(".{}".format(exclusion)):
+                skip_domain = True
+                break
+
+        if skip_domain:
+            print("[*] Skipping : {}".format(colored(url, "yellow")))
             continue
 
         print("[*] Original : {}".format(colored(url, "cyan")))
