@@ -1,4 +1,4 @@
-#!/opt/splunk/bin/python
+#!/usr/bin/python
 """
 Description:
 - Stream CT logs via Certstream
@@ -7,8 +7,10 @@ Description:
 - Recursively download the site when an open directory is found hosting a file with a particular extension
 
 Optional arguments:
+- --quiet   : Don't show wget output
 - --timeout : Set time to wait for a connection
 - --tor     : Download files via the Tor network
+- --verbose : Show error messages
 
 Credit: https://github.com/x0rz/phishing_catcher
 
@@ -51,6 +53,11 @@ from confusables import unconfuse
 
 # Parse Arguments
 parser = argparse.ArgumentParser(description="Attempt to detect phishing kits and open directories via Certstream.")
+parser.add_argument("--quiet",
+                    dest="quiet",
+                    action="store_true",
+                    required=False,
+                    help="Don't show wget output")
 parser.add_argument("--timeout",
                     dest="timeout",
                     type=int,
@@ -62,6 +69,11 @@ parser.add_argument("--tor",
                     action="store_true",
                     required=False,
                     help="Download files over the Tor network")
+parser.add_argument("--verbose",
+                    dest="verbose",
+                    action="store_true",
+                    required=False,
+                    help="Show error messages")
 args = parser.parse_args()
 
 # hxxp://sebastiandahlgren[.]se/2014/06/27/running-a-method-as-a-background-thread-in-python/
@@ -120,37 +132,37 @@ class QueueManager(object):
                     tqdm.tqdm.write(
                         "[*] Download  : "
                         "{} ('Index of ' found)".format(
-                            colored(url, "green")
+                            colored(url, "green", attrs=["bold"])
                         )
                     )
 
                     try:
-                        subprocess.call([
-                            "{}".format(torsocks),
-                            "wget",
-                            "--quiet",
-                            "--execute=robots=off",
-                            "--tries=2",
-                            "--no-clobber",
-                            "--timeout={}".format(timeout),
-                            "--waitretry=0",
-                            "--directory-prefix=./{}/".format(directory),
-                            "--content-disposition",
-                            "--recursive",
-                            "--level=0",
-                            "--no-parent",
-                            url
-                        ])
+                        wget_command = format_wget(timeout, directory, uagent, url)
+
+                        subprocess.call(wget_command)
+
                         tqdm.tqdm.write(
                             "[*] Complete  : "
                             "{}".format(
-                                colored(url, "green", attrs=["underline", "bold"]))
+                                colored(url, "green", attrs=["bold", "underline"])
+                            )
                         )
                         break
                     except Exception as err:
-                        print("[!] Error    : {}".format(
-                            colored(err, "red", attrs=["bold"])
-                        ))
+                        if args.verbose:
+                            tqdm.tqdm.write(
+                                "[!] Error    : "
+                                "{}".format(
+                                    colored(err, "red", attrs=["bold", "underline"])
+                                )
+                            )
+
+                        tqdm.tqdm.write(
+                            "[!] Failed   : "
+                            "{}".format(
+                                colored(url, "red", attrs=["underline"])
+                            )
+                        )
                         continue
             time.sleep(self.interval)        
 
@@ -217,9 +229,16 @@ def score_domain(domain):
         if res is not None:
             domain = '.'.join([res.subdomain, res.domain])
     except Exception as err:
-        print("[!] Error    : {}".format(
-            colored(err, "red", attrs=["bold"])
-        ))
+        if args.verbose:
+            tqdm.tqdm.write(
+                "[!] Error    : "
+                "{}".format(colored(err, "red", attrs=["bold", "underline"]))
+            )
+
+        tqdm.tqdm.write(
+            "[!] Failed   : "
+            "{}".format(colored(domain, "red", attrs=["underline"]))
+        )
         pass
 
     score += int(round(entropy.shannon_entropy(domain)*50))
@@ -252,13 +271,18 @@ def score_domain(domain):
 
 def main():
     """ """
+    # Set variables for arguments
     global uagent
-    uagent         = "Mozilla/5.0 (Windows NT 6.3; Trident/7.0; rv:11.0) like Gecko"
+    uagent = "Mozilla/5.0 (Windows NT 6.3; Trident/7.0; rv:11.0) like Gecko"
     global timeout
-    timeout        = args.timeout
+    timeout = args.timeout
     certstream_url = "wss://certstream.calidog.io"
     global url_queue
-    url_queue      = Queue.Queue()
+    url_queue = Queue.Queue()
+
+    global quiet
+    if args.quiet:
+        quiet = "--quiet"
 
     # Print start messages
     show_summary()
@@ -305,8 +329,10 @@ def show_summary():
     """Print summary of arguments selected"""
 
     print("Summary:")
+    print("    quiet   : {}".format(args.quiet))
     print("    timeout : {}".format(args.timeout))
-    print("    tor     : {}\n".format(args.tor))
+    print("    tor     : {}".format(args.tor))
+    print("    verbose : {}\n".format(args.verbose))
     return
 
 def show_network(uagent, timeout):
@@ -333,8 +359,13 @@ def show_network(uagent, timeout):
                                      timeout=timeout,
                                      allow_redirects=True).content
     except Exception as err:
-        print("[!!] Error   : {}".format(
-            colored(err, "red", attrs=["bold"])
+        if args.verbose:
+            print("[!] Error    : {}".format(
+                colored(err, "red", attrs=["bold", "underline"])
+            ))
+
+        print("[!] Failed   : {}".format(
+            colored("Use --verbose to capture the error message", "red", attrs=["underline"])
         ))
         exit()
 
@@ -345,6 +376,34 @@ def show_network(uagent, timeout):
     else:
         print(colored("{} IP: {}\n".format(ip_type, requested_ip), "yellow", attrs=["bold"]))
     return
+
+def format_wget(timeout, directory, uagent, url):
+    """Return the wget command needed to download files."""
+
+    wget_command = [
+        "wget",
+        "--execute=robots=off",
+        "--tries=2",
+        "--no-clobber",
+        "--timeout={}".format(timeout),
+        "--waitretry=0",
+        "--directory-prefix=./{}/".format(directory),
+        "--header='User-Agent: {}'".format(uagent),
+        "--content-disposition",
+        "--recursive",
+        "--level=0",
+        "--no-parent"
+    ]
+
+    if torsocks != None:
+        wget_command.insert(0, torsocks)
+
+    if args.quiet:
+        wget_command.append(quiet)
+
+    wget_command.append(url)
+        
+    return wget_command
 
 if __name__ == "__main__":
     main()
