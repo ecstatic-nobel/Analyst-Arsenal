@@ -388,7 +388,7 @@ def show_network(uagent, timeout):
     else:
         ip_type  = "Original"
         proxies  = {}
-        torsocks = ""
+        torsocks = None
 
     try:
         global requested_ip
