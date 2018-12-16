@@ -102,7 +102,8 @@ class QueueManager(object):
                 continue
 
             while not url_queue.empty():
-                url   = url_queue.get()
+                url = url_queue.get()
+
                 tqdm.tqdm.write(
                     "[*] Session   : "
                     "{}".format(colored(url, "blue"))
@@ -114,6 +115,20 @@ class QueueManager(object):
                                         timeout=timeout,
                                         allow_redirects=True)
                 except Exception as err:
+                    if args.verbose:
+                        tqdm.tqdm.write(
+                            "[!] Error     : "
+                            "{}".format(
+                                colored(err, "red", attrs=["bold", "underline"])
+                            )
+                        )
+
+                    tqdm.tqdm.write(
+                        "[!] Failed    : "
+                        "{}".format(
+                            colored(url, "red", attrs=["underline"])
+                        )
+                    )
                     continue
 
                 if not (resp.status_code == 200 and "Index of " in resp.content):
@@ -151,14 +166,14 @@ class QueueManager(object):
                     except Exception as err:
                         if args.verbose:
                             tqdm.tqdm.write(
-                                "[!] Error    : "
+                                "[!] Error     : "
                                 "{}".format(
                                     colored(err, "red", attrs=["bold", "underline"])
                                 )
                             )
 
                         tqdm.tqdm.write(
-                            "[!] Failed   : "
+                            "[!] Failed    : "
                             "{}".format(
                                 colored(url, "red", attrs=["underline"])
                             )
