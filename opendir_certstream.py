@@ -298,6 +298,30 @@ def main():
 
     if external["override_suspicious.yaml"] is True:
         suspicious = external
+
+        if external["archives"] is not None:
+            suspicious["archives"] = external["archives"]
+        else:
+            print(colored("At least one extension is required for 'archives'.", "red", attrs=["bold"]))
+            exit()
+
+        if external["files"] is not None:
+            suspicious["files"] = external["files"]
+        else:
+            print(colored("At least one extension is required for 'files'.", "red", attrs=["bold"]))
+            exit()
+
+        if external["keywords"] is not None:
+            suspicious["keywords"] = external["keywords"]
+        else:
+            print(colored("At least one keyword is required for 'keywords'.", "red", attrs=["bold"]))
+            exit()
+
+        if external["tlds"] is not None:
+            suspicious["tlds"] = external["tlds"]
+        else:
+            print(colored("At least one tld is required for 'tlds'.", "red", attrs=["bold"]))
+            exit()
     else:
         if external["keywords"] is not None:
             suspicious["keywords"].update(external["keywords"])
