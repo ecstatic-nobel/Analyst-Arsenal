@@ -31,10 +31,12 @@ The following command will:
 - Recursively download the site when an open directory is found hosting a file with a particular extension  
 
 Optional arguments:  
+- **--quiet** : Don't show wget output  
 - **--timeout** : Set time to wait for a connection  
 - **--tor** : Download files via the Tor network  
+- **--verbose** : Show error messages  
 ```bash
-python opendir_certstream.py [--timeout] [--tor]
+python opendir_certstream.py [--quiet] [--timeout] [--tor] [--verbose]
 ```
 **Note**: Any URLs in the queue will be lost once the program stops.  
 
@@ -51,10 +53,12 @@ The following command will:
 Optional arguments:  
 - **--dryrun** : Perform a test run to see what would be downloaded  
 - **--exclude** : A comma-separated list of domains to not download content from (ex. 'google.com,bing.com')  
+- **--quiet** : Don't show wget output  
 - **--timeout** : Set time to wait for a connection  
 - **--tor** : Download files via the Tor network  
+- **--verbose** : Show error messages  
 ```bash
-python opendir_urlscan.py <QUERY_TYPE> <DELTA> <FILE_EXTENSION> [--dry-run] [--exclude=CSV] [--timeout] [--tor]
+python opendir_urlscan.py <QUERY_TYPE> <DELTA> <FILE_EXTENSION> [--dry-run] [--exclude=CSV] [--quiet] [--timeout] [--tor] [--verbose]
 ```
 **Note**: If the path is a file, it will be downloaded regardless of whether it's an open directory.  
 

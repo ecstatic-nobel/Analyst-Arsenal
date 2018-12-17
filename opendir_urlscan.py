@@ -1,4 +1,4 @@
-#!/opt/splunk/bin/python
+#!/usr/bin/python
 """
 Description:
 - Make requests to the domains retrieved from urlscan.io
@@ -12,8 +12,10 @@ Description:
 Optional arguments:
 - --dryrun  : Perform a test run to see what would be downloaded
 - --exclude : A comma-separated list of domains to not download content from (ex. 'google.com,bing.com')
+- --quiet   : Don't show wget output
 - --timeout : Set time to wait for a connection
 - --tor     : Download files via the Tor network
+- --verbose : Show error messages
 
 Credit: https://github.com/ninoseki/miteru
 
@@ -60,12 +62,6 @@ parser.add_argument(metavar="file extension",
                     dest="file_extension",
                     choices=["7z", "apk", "bat", "bz", "bz2", "crypt", "dll", "doc", "docx", "exe", "gz", "hta", "iso", "jar", "json", "lnk", "ppt", "ps1", "py", "rar", "sfx", "sh", "tar", "vb", "vbs", "xld", "xls", "xlsx", "zip"],
                     help="7z, apk, bat, bz, bz2, crypt, dll, doc, docx, exe, gz, hta, iso, jar, json, lnk, ppt, ps1, py, rar, sfx, sh, tar, vb, vbs, xld, xls, xlsx, zip")
-parser.add_argument("--timeout",
-                    dest="timeout",
-                    type=int,
-                    default=30,
-                    required=False,
-                    help="Set time to wait for a connection")
 parser.add_argument("--dryrun",
                     dest="dry_run",
                     action="store_true",
@@ -77,11 +73,27 @@ parser.add_argument("--exclude",
                     default="",
                     required=False,
                     help="A comma-separated list of domains to not download content from (ex. 'google.com,bing.com')")
+parser.add_argument("--quiet",
+                    dest="quiet",
+                    action="store_true",
+                    required=False,
+                    help="Don't show wget output")
+parser.add_argument("--timeout",
+                    dest="timeout",
+                    type=int,
+                    default=30,
+                    required=False,
+                    help="Set time to wait for a connection")
 parser.add_argument("--tor",
                     dest="tor",
                     action="store_true",
                     required=False,
                     help="Download files over the Tor network")
+parser.add_argument("--verbose",
+                    dest="verbose",
+                    action="store_true",
+                    required=False,
+                    help="Show error messages")
 args = parser.parse_args()
 
 def main():
@@ -93,6 +105,10 @@ def main():
     exclusions = args.exclude.split(",")
     uagent     = "Mozilla/5.0 (Windows NT 6.3; Trident/7.0; rv:11.0) like Gecko"
 
+    global quiet
+    if args.quiet:
+        quiet = "--quiet"
+
     # Print start messages
     show_summary()
     show_network(uagent)
@@ -101,20 +117,24 @@ def main():
     with open("external.yaml", "r") as f:
         external = yaml.safe_load(f)
 
-    if external["archives"] is not None:
-        archives = external["archives"]
-    else:
-        print(colored("At least one extension is required for 'archives'.", "red", attrs=["bold"]))
-        exit()
+    for key in external.keys():
+        if key == "override_suspicious.yaml" or key == "keywords" or key == "tlds":
+            continue
 
-    if external["files"] is not None:
-        files = external["files"]
-    else:
-        print(colored("At least one extension is required for 'files'.", "red", attrs=["bold"]))
-        exit()
-
-    # Set queries
-    queries = external["queries"]
+        if external[key] is not None and (key == "archives" or key == "files" or key == "queries"):
+            if key == "archives":
+                archives = external[key]
+            elif key == "files":
+                files = external[key]
+            elif key == "queries":
+                queries = external[key]
+        else:
+            print(colored(
+                "No {} found in external.yaml ({}:).".format(key, key),
+                "red",
+                attrs=["bold"]
+            ))
+            exit()
 
     # Build dict of extensions
     extensions = {}
@@ -134,7 +154,7 @@ def main():
         # Split URL into parts
         split_url   = url.split("/")
         protocol    = split_url[0]
-        domain      = split_url[2]
+        domain      = split_url[2].split(":")[0]
         skip_domain = False
         
         # Skip exclusions
@@ -162,7 +182,7 @@ def main():
             # Follow URL path and continue if a download was detected for a dry-run
             if "dry_domain" in vars():
                 print("[*] Download : {} (Recursively downloaded)".format(
-                    colored(url, "green", attrs=["underline", "bold"])
+                    colored(url, "green", attrs=["bold"])
                 ))
                 continue
 
@@ -176,9 +196,7 @@ def main():
                                     timeout=timeout,
                                     allow_redirects=True)
             except Exception as err:
-                print("[!] Error    : {}".format(
-                    colored(err, "red", attrs=["bold"])
-                ))
+                exception_message(err, url)
                 continue
 
             if resp.status_code != 200:
@@ -186,23 +204,25 @@ def main():
 
             # An open directory is found
             if "Index of " in resp.content:
-                if glob.glob("./*/{}".format(domain.split(":")[0])):
+                if glob.glob("./*/{}".format(domain)):
                     print("[-] Skipping : {} (Directory '{}' already exists)".format(
-                        colored(url, "red", attrs=["underline", "bold"]),
-                        domain.split(":")[0]
+                        colored(url, "red"),
+                        domain
                     ))
                     break
 
                 for extension in extensions.keys():
                     if ".{}<".format(extension) in resp.content.lower() and extension in archives:
                         directory = "KitJackinSeason"
+                        recursive = True
                     elif ".{}<".format(ext) in resp.content.lower() and extension in files:
                         directory = "InterestingFile"
+                        recursive = False
                     else:
                         continue
 
                     print("[*] Download : {} ('Index of ' found)".format(
-                        colored(url, "green")
+                        colored(url, "green", attrs=["bold"])
                     ))
 
                     if args.dry_run:
@@ -211,40 +231,33 @@ def main():
             
                     try:
                         if directory == "InterestingFile":
-                            os.mkdir("./InterestingFile/{}".format(domain.split(":")[0]))
+                            os.mkdir("./{}/{}".format(directory, domain))
 
-                        subprocess.call([
-                            "{}".format(torsocks),
-                            "wget",
-                            "--quiet",
-                            "--execute=robots=off",
-                            "--tries=2",
-                            "--no-clobber",
-                            "--timeout={}".format(timeout),
-                            "--waitretry=0",
-                            "--directory-prefix=./{}/{}".format(directory, domain.split(":")[0]),
-                            "--content-disposition",
-                            "--recursive",
-                            "--level=0",
-                            "--no-parent",
-                            url
-                        ])
+                        wget_command = format_wget(timeout,
+                                                   directory,
+                                                   uagent,
+                                                   recursive,
+                                                   url)
+
+                        subprocess.call(wget_command)
+
                         print("[*] Complete : {}".format(
-                            colored(url, "green", attrs=["underline", "bold"])
+                            colored(url, "green", attrs=["bold", "underline"])
                         ))
                         break
                     except Exception as err:
-                        print("[!] Error    : {}".format(
-                            colored(err, "red", attrs=["bold"])
-                        ))
+                        exception_message(err, url)
                         continue
 
             # A URL is found ending in the specified extension but the server responded with no Content-Type
             if "Content-Type" not in resp.headers.keys():
-                if os.path.exists("./InterestingFile/{}".format(domain.split(":")[0])):
+                directory = "InterestingFile"
+                recursive = False
+
+                if os.path.exists("./{}/{}".format(directory, domain)):
                     print("[-] Skipping : {} (Directory '{}' already exists)".format(
-                        colored(url, "red", attrs=["underline", "bold"]),
-                        domain.split(":")[0]
+                        colored(url, "red"),
+                        domain
                     ))
                     break
 
@@ -256,45 +269,40 @@ def main():
                         ))
                     else:
                         print("[*] Download : {} (Responded with no Content-Type)".format(
-                            colored(url, "green")
+                            colored(url, "green", attrs=["bold"])
                         ))
 
                     if args.dry_run:
                         break
 
                     try:
-                        os.mkdir("./InterestingFile/{}".format(domain.split(":")[0]))
+                        os.mkdir("./{}/{}".format(directory, domain))
 
-                        subprocess.call([
-                            "{}".format(torsocks),
-                            "wget",
-                            "--quiet",
-                            "--execute=robots=off",
-                            "--tries=2",
-                            "--no-clobber",
-                            "--timeout={}".format(timeout),
-                            "--waitretry=0",
-                            "--directory-prefix=./InterestingFile/{}".format(domain.split(":")[0]),
-                            "--content-disposition",
-                            "--no-parent",
-                            url
-                        ])
+                        wget_command = format_wget(timeout,
+                                                   directory,
+                                                   uagent,
+                                                   recursive,
+                                                   url)
+
+                        subprocess.call(wget_command)
+
                         print("[*] Complete : {}".format(
-                            colored(url, "green", attrs=["underline", "bold"])
+                            colored(url, "green", attrs=["bold", "underline"])
                         ))
                         break
                     except Exception as err:
-                        print("[!] Error    : {}".format(
-                            colored(err, "red", attrs=["bold"])
-                        ))
+                        exception_message(err, url)
                         continue
 
             # A file is found with the Mime-Type of the specified extension
             if resp.headers["Content-Type"].startswith(extensions[ext]) or url.endswith(".{}".format(ext)):
-                if os.path.exists("./InterestingFile/{}".format(domain.split(":")[0])):
+                directory = "InterestingFile"
+                recursive = False
+
+                if os.path.exists("./{}/{}".format(directory, domain)):
                     print("[-] Skipping : {} (Directory '{}' already exists)".format(
-                        colored(url, "red", attrs=["underline", "bold"]),
-                        domain.split(":")[0]
+                        colored(url, "red"),
+                        domain
                     ))
                     break
 
@@ -306,7 +314,7 @@ def main():
                     ))
                 else:
                     print("[*] Download : {} ({} found)".format(
-                        colored(url, "green"),
+                        colored(url, "green", attrs=["bold"]),
                         ext
                     ))
 
@@ -314,30 +322,22 @@ def main():
                     break
 
                 try:
-                    os.mkdir("./InterestingFile/{}".format(domain.split(":")[0]))
+                    os.mkdir("./{}/{}".format(directory, domain))
 
-                    subprocess.call([
-                        "{}".format(torsocks),
-                        "wget",
-                        "--quiet",
-                        "--execute=robots=off",
-                        "--tries=2",
-                        "--no-clobber",
-                        "--timeout={}".format(timeout),
-                        "--waitretry=0",
-                        "--directory-prefix=./InterestingFile/{}".format(domain.split(":")[0]),
-                        "--content-disposition",
-                        "--no-parent",
-                        url
-                    ])
+                    wget_command = format_wget(timeout,
+                                               directory,
+                                               uagent,
+                                               recursive,
+                                               url)
+                    
+                    subprocess.call(wget_command)
+
                     print("[*] Complete : {}".format(
-                        colored(url, "green", attrs=["underline", "bold"])
+                        colored(url, "green", attrs=["bold", "underline"])
                     ))
                     break
                 except Exception as err:
-                    print("[!] Error    : {}".format(
-                        colored(err, "red", attrs=["bold"])
-                    ))
+                    exception_message(err, url)
                     continue
 
         if "dry_domain" in vars():
@@ -354,8 +354,10 @@ def show_summary():
     print("    delta          : {}".format(args.delta))
     print("    file_extension : {}".format(args.file_extension.lower()))
     print("    exclusions     : {}".format(args.exclude.split(",")))
+    print("    quiet          : {}".format(args.quiet))
     print("    timeout        : {}".format(args.timeout))
-    print("    tor            : {}\n".format(args.tor))
+    print("    tor            : {}".format(args.tor))
+    print("    verbose        : {}\n".format(args.verbose))
     return
 
 def show_network(uagent):
@@ -372,7 +374,7 @@ def show_network(uagent):
     else:
         ip_type  = "Original"
         proxies  = {}
-        torsocks = ""
+        torsocks = None
 
     try:
         requested_ip = requests.get("https://api.ipify.org",
@@ -381,17 +383,35 @@ def show_network(uagent):
                                      timeout=args.timeout,
                                      allow_redirects=True).content
     except Exception as err:
-        print("[!] Error    : {}".format(
-            colored(err, "red", attrs=["bold"])
+        if args.verbose:
+            print("[!] Error    : {}".format(
+                colored(err, "red", attrs=["bold", "underline"])
+            ))
+
+        print("[!] Failed   : {}".format(
+            colored("Use --verbose to capture the error message", "red", attrs=["underline"])
         ))
         exit()
 
     print(colored("Getting IP Address...", "yellow", attrs=["bold"]))
+
     if args.tor:
         obfuscated_ip = ".".join(["XXX.XXX.XXX", requested_ip.split(".")[:-1][0]])
         print(colored("{} IP: {}\n".format(ip_type, obfuscated_ip), "yellow", attrs=["bold"]))
     else:
         print(colored("{} IP: {}\n".format(ip_type, requested_ip), "yellow", attrs=["bold"]))
+    return
+
+def exception_message(err, url):
+    """ """
+    if args.verbose:
+        print("[!] Error    : {}".format(
+            colored(err, "red", attrs=["bold", "underline"])
+        ))
+
+    print("[!] Failed   : {}".format(
+        colored(url, "red", attrs=["underline"])
+    ))
     return
 
 def get_urls(delta, queries, qtype, ext, uagent, timeout, extensions):
@@ -434,6 +454,36 @@ def get_urls(delta, queries, qtype, ext, uagent, timeout, extensions):
             if len(result_files) > 0:
                 urls.append(url)
     return urls
+
+def format_wget(timeout, directory, uagent, recursive, url):
+    """Return the wget command needed to download files."""
+
+    wget_command = [
+        "wget",
+        "--execute=robots=off",
+        "--tries=2",
+        "--no-clobber",
+        "--timeout={}".format(timeout),
+        "--waitretry=0",
+        "--directory-prefix=./{}/".format(directory),
+        "--header='User-Agent: {}'".format(uagent),
+        "--content-disposition",
+        "--no-parent"
+    ]
+
+    if torsocks != None:
+        wget_command.insert(0, torsocks)
+
+    if args.quiet:
+        wget_command.append(quiet)
+
+    if recursive == False:
+        wget_command.append("--recursive")
+        wget_command.append("--level=0")
+
+    wget_command.append(url)
+        
+    return wget_command
 
 if __name__ == "__main__":    
     main()
