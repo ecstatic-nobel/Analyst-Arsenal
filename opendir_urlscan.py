@@ -117,20 +117,24 @@ def main():
     with open("external.yaml", "r") as f:
         external = yaml.safe_load(f)
 
-    if external["archives"] is not None:
-        archives = external["archives"]
-    else:
-        print(colored("At least one extension is required for 'archives'.", "red", attrs=["bold"]))
-        exit()
+    for key in external.keys():
+        if key == "override_suspicious.yaml" or key == "keywords" or key == "tlds":
+            continue
 
-    if external["files"] is not None:
-        files = external["files"]
-    else:
-        print(colored("At least one extension is required for 'files'.", "red", attrs=["bold"]))
-        exit()
-
-    # Set queries
-    queries = external["queries"]
+        if external[key] is not None and (key == "archives" or key == "files" or key == "queries"):
+            if key == "archives":
+                archives = external[key]
+            elif key == "files":
+                files = external[key]
+            elif key == "queries":
+                queries = external[key]
+        else:
+            print(colored(
+                "No {} found in external.yaml ({}:).".format(key, key),
+                "red",
+                attrs=["bold"]
+            ))
+            exit()
 
     # Build dict of extensions
     extensions = {}
@@ -192,14 +196,7 @@ def main():
                                     timeout=timeout,
                                     allow_redirects=True)
             except Exception as err:
-                if args.verbose:
-                    print("[!] Error    : {}".format(
-                        colored(err, "red", attrs=["bold", "underline"])
-                    ))
-
-                print("[!] Failed   : {}".format(
-                    colored(url, "red", attrs=["underline"])
-                ))
+                exception_message(err, url)
                 continue
 
             if resp.status_code != 200:
@@ -249,14 +246,7 @@ def main():
                         ))
                         break
                     except Exception as err:
-                        if args.verbose:
-                            print("[!] Error    : {}".format(
-                                colored(err, "red", attrs=["bold", "underline"])
-                            ))
-
-                        print("[!] Failed   : {}".format(
-                            colored(url, "red", attrs=["underline"])
-                        ))
+                        exception_message(err, url)
                         continue
 
             # A URL is found ending in the specified extension but the server responded with no Content-Type
@@ -301,14 +291,7 @@ def main():
                         ))
                         break
                     except Exception as err:
-                        if args.verbose:
-                            print("[!] Error    : {}".format(
-                                colored(err, "red", attrs=["bold", "underline"])
-                            ))
-
-                        print("[!] Failed   : {}".format(
-                            colored(url, "red", attrs=["underline"])
-                        ))
+                        exception_message(err, url)
                         continue
 
             # A file is found with the Mime-Type of the specified extension
@@ -354,14 +337,7 @@ def main():
                     ))
                     break
                 except Exception as err:
-                    if args.verbose:
-                        print("[!] Error    : {}".format(
-                            colored(err, "red", attrs=["bold", "underline"])
-                        ))
-
-                    print("[!] Failed   : {}".format(
-                        colored(url, "red", attrs=["underline"])
-                    ))
+                    exception_message(err, url)
                     continue
 
         if "dry_domain" in vars():
@@ -418,11 +394,24 @@ def show_network(uagent):
         exit()
 
     print(colored("Getting IP Address...", "yellow", attrs=["bold"]))
+
     if args.tor:
         obfuscated_ip = ".".join(["XXX.XXX.XXX", requested_ip.split(".")[:-1][0]])
         print(colored("{} IP: {}\n".format(ip_type, obfuscated_ip), "yellow", attrs=["bold"]))
     else:
         print(colored("{} IP: {}\n".format(ip_type, requested_ip), "yellow", attrs=["bold"]))
+    return
+
+def exception_message(err, url):
+    """ """
+    if args.verbose:
+        print("[!] Error    : {}".format(
+            colored(err, "red", attrs=["bold", "underline"])
+        ))
+
+    print("[!] Failed   : {}".format(
+        colored(url, "red", attrs=["underline"])
+    ))
     return
 
 def get_urls(delta, queries, qtype, ext, uagent, timeout, extensions):

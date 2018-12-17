@@ -314,47 +314,27 @@ def main():
     if external["override_suspicious.yaml"] is True:
         suspicious = external
 
-        if external["archives"] is not None:
-            suspicious["archives"] = external["archives"]
-        else:
-            print(colored("At least one extension is required for 'archives'.", "red", attrs=["bold"]))
-            exit()
+        for key in external.keys():
+            if external[key] is None:
+                external_error(key, "external")
 
-        if external["files"] is not None:
-            suspicious["files"] = external["files"]
-        else:
-            print(colored("At least one extension is required for 'files'.", "red", attrs=["bold"]))
-            exit()
-
-        if external["keywords"] is not None:
-            suspicious["keywords"] = external["keywords"]
-        else:
-            print(colored("At least one keyword is required for 'keywords'.", "red", attrs=["bold"]))
-            exit()
-
-        if external["tlds"] is not None:
-            suspicious["tlds"] = external["tlds"]
-        else:
-            print(colored("At least one tld is required for 'tlds'.", "red", attrs=["bold"]))
-            exit()
+            suspicious[key] = external[key]
     else:
-        if external["keywords"] is not None:
-            suspicious["keywords"].update(external["keywords"])
+        for key in external.keys():
+            if key == "override_suspicious.yaml" or key == "queries":
+                continue
 
-        if external["tlds"] is not None:
-            suspicious["tlds"].update(external["tlds"])
+            if key == "keywords" or key == "tlds":
+                if external[key] is not None:
+                    suspicious[key].update(external[key])
+            elif key == "archives" or key == "files":
+                if external[key] is not None:
+                    suspicious[key] = external[key]
+                else:
+                    external_error(key, "external")
 
-        if external["archives"] is not None:
-            suspicious["archives"] = external["archives"]
-        else:
-            print(colored("At least one extension is required for 'archives'.", "red", attrs=["bold"]))
-            exit()
-
-        if external["files"] is not None:
-            suspicious["files"] = external["files"]
-        else:
-            print(colored("At least one extension is required for 'files'.", "red", attrs=["bold"]))
-            exit()
+            if key not in suspicious.keys() or suspicious[key] is None:
+                external_error(key, "suspicious")
 
     # Start queue and listen for events via Certstream
     print(colored("Starting queue...\n", "yellow", attrs=["bold"]))
@@ -415,6 +395,15 @@ def show_network(uagent, timeout):
     else:
         print(colored("{} IP: {}\n".format(ip_type, requested_ip), "yellow", attrs=["bold"]))
     return
+
+def external_error(key, override):
+    """ """
+    print(colored(
+        "No {} found in {}.yaml ({}:).".format(key, override, key),
+        "red",
+        attrs=["bold"]
+    ))
+    exit()
 
 def format_wget(timeout, directory, uagent, url):
     """Return the wget command needed to download files."""
