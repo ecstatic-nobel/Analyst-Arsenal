@@ -7,10 +7,12 @@ Description:
 - Recursively download the site when an open directory is found hosting a file with a particular extension
 
 Optional arguments:
-- --quiet   : Don't show wget output
-- --timeout : Set time to wait for a connection
-- --tor     : Download files via the Tor network
-- --verbose : Show error messages
+- --file-dir : Directory to use for interesting files detected
+- --kit-dir  : Directory to use for phishing kits detected
+- --quiet    : Don't show wget output
+- --timeout  : Set time to wait for a connection
+- --tor      : Download files via the Tor network
+- --verbose  : Show error messages
 
 Credit: https://github.com/x0rz/phishing_catcher
 
@@ -22,10 +24,10 @@ Resources:
 Usage:
 
 ```
-python opendir_certstream.py
+python opendir_certstream.py [--file-dir] [--kit-dir] [--quiet] [--timeout] [--tor] [--verbose]
 ```
 
-Debugger: open("/tmp/splunk_script.txt", "a").write("{}: <MSG>\n".format(<VAR>))
+Debugger: open("/tmp/opendir.txt", "a").write("{}: <MSG>\n".format(<VAR>))
 """
 
 import argparse
@@ -53,6 +55,14 @@ from confusables import unconfuse
 
 # Parse Arguments
 parser = argparse.ArgumentParser(description="Attempt to detect phishing kits and open directories via Certstream.")
+parser.add_argument("--file-dir",
+                    dest="fdir",
+                    required=False,
+                    help="Directory to use for interesting files detected (default: ./InterestingFiles))")
+parser.add_argument("--kit-dir",
+                    dest="kdir",
+                    required=False,
+                    help="Directory to use for phishing kits detected (default: ./KitJackinSeason))")
 parser.add_argument("--quiet",
                     dest="quiet",
                     action="store_true",
@@ -138,11 +148,20 @@ class QueueManager(object):
 
                 for ext in extensions:
                     if "{}<".format(ext) in resp.content.lower() and ext in suspicious["archives"]:
-                        directory = "KitJackinSeason"
+                        directory = "./KitJackinSeason/"
+
+                        if args.kdir:
+                            directory = args.kdir
                     elif "{}<".format(ext) in resp.content.lower() and ext in suspicious["files"]:
-                        directory = "InterestingFile"
+                        directory = "./InterestingFile/"
+
+                        if args.fdir:
+                            directory = args.fdir
                     else:
                         continue
+
+                    if not directory.endswith("/"):
+                        directory = "{}/".format(directory)
 
                     tqdm.tqdm.write(
                         "[*] Download  : "
@@ -202,7 +221,8 @@ def callback(message, context):
             
             if score < 75 or \
                  domain.startswith("www.") or \
-                 domain == "chat.kowari.macmoney.co.za" or \
+                 domain.endswith("chat.kowari.macmoney.co.za") or \
+                 domain.endswith("facebook.sitechs.net") or \
                  domain.endswith(".composedb.com") or \
                  domain.endswith(".brilliantpocket.com") or \
                  domain.endswith(".google.com") or \
@@ -415,7 +435,7 @@ def format_wget(timeout, directory, uagent, url):
         "--no-clobber",
         "--timeout={}".format(timeout),
         "--waitretry=0",
-        "--directory-prefix=./{}/".format(directory),
+        "--directory-prefix={}".format(directory),
         "--header='User-Agent: {}'".format(uagent),
         "--content-disposition",
         "--recursive",
