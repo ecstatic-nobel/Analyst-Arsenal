@@ -25,7 +25,6 @@ files:
     'hta': 'donotcheck'
     'iso': 'application/octet-stream'
     'jar': 'application/java-archive'
-    'json': 'donotcheck'
     'lnk': 'application/octet-stream'
     'ppt': 'application/vnd.ms-powerpoint'
     'ps1': 'donotcheck'
