@@ -20,6 +20,7 @@ Resources:
     http://docs.python-requests.org/en/master/user/advanced/#proxies
     https://gist.github.com/jefftriplett/9748036
     https://ec.haxx.se/libcurl-proxies.html
+    https://trac.torproject.org/projects/tor/wiki/doc/torsocks
 
 Usage:
 
