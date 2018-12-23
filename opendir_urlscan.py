@@ -27,10 +27,10 @@ Resources:
 Usage:
 
 ```
-python opendir_urlscan.py <QUERY_TYPE> <DELTA> <FILE_EXTENSION> [--dry-run] [--exclude=CSV]
+python opendir_urlscan.py <QUERY_TYPE> <DELTA> <FILE_EXTENSION> [--dry-run] [--exclude=CSV] [--quiet] [--timeout] [--tor] [--verbose]
 ```
 
-Debugger: open("/tmp/splunk_script.txt", "a").write("{}: <MSG>\n".format(<VAR>))
+Debugger: open("/tmp/opendir.txt", "a").write("{}: <MSG>\n".format(<VAR>))
 """
 
 import argparse
@@ -73,6 +73,16 @@ parser.add_argument("--exclude",
                     default="",
                     required=False,
                     help="A comma-separated list of domains to not download content from (ex. 'google.com,bing.com')")
+parser.add_argument("--file-dir",
+                    dest="fdir",
+                    default="./InterestingFile/",
+                    required=False,
+                    help="Directory to use for interesting files detected (default: ./InterestingFiles))")
+parser.add_argument("--kit-dir",
+                    dest="kdir",
+                    default="./KitJackinSeason/",
+                    required=False,
+                    help="Directory to use for phishing kits detected (default: ./KitJackinSeason))")
 parser.add_argument("--quiet",
                     dest="quiet",
                     action="store_true",
@@ -213,13 +223,16 @@ def main():
 
                 for extension in extensions.keys():
                     if ".{}<".format(extension) in resp.content.lower() and extension in archives:
-                        directory = "KitJackinSeason"
+                        directory = args.kdir
                         recursive = True
                     elif ".{}<".format(ext) in resp.content.lower() and extension in files:
-                        directory = "InterestingFile"
+                        directory = args.fdir
                         recursive = False
                     else:
                         continue
+
+                    if not directory.endswith("/"):
+                        directory = "{}/".format(directory)
 
                     print("[*] Download : {} ('Index of ' found)".format(
                         colored(url, "green", attrs=["bold"])
@@ -230,8 +243,8 @@ def main():
                         break
             
                     try:
-                        if directory == "InterestingFile":
-                            os.mkdir("./{}/{}".format(directory, domain))
+                        if directory == args.fdir:
+                            os.mkdir("{}{}".format(directory, domain))
 
                         wget_command = format_wget(timeout,
                                                    directory,
@@ -251,10 +264,13 @@ def main():
 
             # A URL is found ending in the specified extension but the server responded with no Content-Type
             if "Content-Type" not in resp.headers.keys():
-                directory = "InterestingFile"
+                directory = args.fdir
                 recursive = False
 
-                if os.path.exists("./{}/{}".format(directory, domain)):
+                if not directory.endswith("/"):
+                    directory = "{}/".format(directory)
+
+                if os.path.exists("{}{}".format(directory, domain)):
                     print("[-] Skipping : {} (Directory '{}' already exists)".format(
                         colored(url, "red"),
                         domain
@@ -276,7 +292,7 @@ def main():
                         break
 
                     try:
-                        os.mkdir("./{}/{}".format(directory, domain))
+                        os.mkdir("{}{}".format(directory, domain))
 
                         wget_command = format_wget(timeout,
                                                    directory,
@@ -296,10 +312,13 @@ def main():
 
             # A file is found with the Mime-Type of the specified extension
             if resp.headers["Content-Type"].startswith(extensions[ext]) or url.endswith(".{}".format(ext)):
-                directory = "InterestingFile"
+                directory = args.fdir
                 recursive = False
 
-                if os.path.exists("./{}/{}".format(directory, domain)):
+                if not directory.endswith("/"):
+                    directory = "{}/".format(directory)
+
+                if os.path.exists("{}{}".format(directory, domain)):
                     print("[-] Skipping : {} (Directory '{}' already exists)".format(
                         colored(url, "red"),
                         domain
@@ -322,7 +341,7 @@ def main():
                     break
 
                 try:
-                    os.mkdir("./{}/{}".format(directory, domain))
+                    os.mkdir("{}{}".format(directory, domain))
 
                     wget_command = format_wget(timeout,
                                                directory,
@@ -352,8 +371,10 @@ def show_summary():
     print("Summary:")
     print("    query_type     : {}".format(args.query_type.lower()))
     print("    delta          : {}".format(args.delta))
-    print("    file_extension : {}".format(args.file_extension.lower()))
     print("    exclusions     : {}".format(args.exclude.split(",")))
+    print("    file_dir       : {}".format(args.fdir))
+    print("    file_extension : {}".format(args.file_extension.lower()))
+    print("    kit_dir        : {}".format(args.kdir))
     print("    quiet          : {}".format(args.quiet))
     print("    timeout        : {}".format(args.timeout))
     print("    tor            : {}".format(args.tor))
@@ -465,7 +486,7 @@ def format_wget(timeout, directory, uagent, recursive, url):
         "--no-clobber",
         "--timeout={}".format(timeout),
         "--waitretry=0",
-        "--directory-prefix=./{}/".format(directory),
+        "--directory-prefix={}".format(directory),
         "--header='User-Agent: {}'".format(uagent),
         "--content-disposition",
         "--no-parent"
