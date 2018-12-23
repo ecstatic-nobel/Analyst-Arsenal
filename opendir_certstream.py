@@ -57,10 +57,12 @@ from confusables import unconfuse
 parser = argparse.ArgumentParser(description="Attempt to detect phishing kits and open directories via Certstream.")
 parser.add_argument("--file-dir",
                     dest="fdir",
+                    default="./InterestingFile/",
                     required=False,
                     help="Directory to use for interesting files detected (default: ./InterestingFiles))")
 parser.add_argument("--kit-dir",
                     dest="kdir",
+                    default="./KitJackinSeason/",
                     required=False,
                     help="Directory to use for phishing kits detected (default: ./KitJackinSeason))")
 parser.add_argument("--quiet",
@@ -148,12 +150,12 @@ class QueueManager(object):
 
                 for ext in extensions:
                     if "{}<".format(ext) in resp.content.lower() and ext in suspicious["archives"]:
-                        directory = "./KitJackinSeason/"
+                        directory = args.kdir
 
                         if args.kdir:
                             directory = args.kdir
                     elif "{}<".format(ext) in resp.content.lower() and ext in suspicious["files"]:
-                        directory = "./InterestingFile/"
+                        directory = args.fdir
 
                         if args.fdir:
                             directory = args.fdir
@@ -368,10 +370,12 @@ def show_summary():
     """Print summary of arguments selected"""
 
     print("Summary:")
-    print("    quiet   : {}".format(args.quiet))
-    print("    timeout : {}".format(args.timeout))
-    print("    tor     : {}".format(args.tor))
-    print("    verbose : {}\n".format(args.verbose))
+    print("    file_dir : {}".format(args.fdir))
+    print("    kit_dir  : {}".format(args.kdir))
+    print("    quiet    : {}".format(args.quiet))
+    print("    timeout  : {}".format(args.timeout))
+    print("    tor      : {}".format(args.tor))
+    print("    verbose  : {}\n".format(args.verbose))
     return
 
 def show_network(uagent, timeout):
