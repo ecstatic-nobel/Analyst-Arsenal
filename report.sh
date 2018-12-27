@@ -29,7 +29,7 @@ do
 
         echo -e "\nThreatActorEmail" >> pkt.report
         ThreatActorEmail=$(
-            grep -rhoE "\s+=\s+('|\")\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,6}\b('|\")" KitJackinSeason/.secureapple-appleid.servehttp.com | \
+            grep -rhoE "\s+=\s+('|\")\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,6}\b('|\")" | \
                 tr -d " ='\"" | \
                 grep \@ | \
                 grep -v example.com | \
