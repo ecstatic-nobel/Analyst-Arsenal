@@ -10,16 +10,19 @@ Description:
 - File Extension : 7z, apk, bat, bz, bz2, crypt, dll, doc, docx, exe, gz, hta, iso, jar, json, lnk, ppt, ps1, py, rar, sfx, sh, tar, vb, vbs, xld, xls, xlsx, zip
 
 Optional arguments:
-- --dryrun  : Perform a test run to see what would be downloaded
-- --exclude : A comma-separated list of domains to not download content from (ex. 'google.com,bing.com')
-- --quiet   : Don't show wget output
-- --timeout : Set time to wait for a connection
-- --tor     : Download files via the Tor network
-- --verbose : Show error messages
+- --dryrun   : Perform a test run to see what would be downloaded
+- --exclude  : A comma-separated list of domains to not download content from (ex. 'google.com,bing.com')
+- --file-dir : Directory to use for interesting files detected (default: ./InterestingFiles/)
+- --kit-dir  : Directory to use for phishing kits detected (default: ./KitJackinSeason/)
+- --quiet    : Don't show wget output
+- --timeout  : Set time to wait for a connection
+- --tor      : Download files via the Tor network
+- --verbose  : Show error messages
 
 Credit: https://github.com/ninoseki/miteru
 
 Resources:
+    https://urlscan.io/search/#*
     http://docs.python-requests.org/en/master/user/advanced/#proxies
     https://gist.github.com/jefftriplett/9748036
     https://ec.haxx.se/libcurl-proxies.html
@@ -28,7 +31,7 @@ Resources:
 Usage:
 
 ```
-python opendir_urlscan.py <QUERY_TYPE> <DELTA> <FILE_EXTENSION> [--dry-run] [--exclude=CSV] [--quiet] [--timeout] [--tor] [--verbose]
+python opendir_urlscan.py <QUERY_TYPE> <DELTA> <FILE_EXTENSION> [--dry-run] [--exclude=CSV] [--file-dir] [--kit-dir] [--quiet] [--timeout] [--tor] [--verbose]
 ```
 
 Debugger: open("/tmp/opendir.txt", "a").write("{}: <MSG>\n".format(<VAR>))
@@ -36,6 +39,7 @@ Debugger: open("/tmp/opendir.txt", "a").write("{}: <MSG>\n".format(<VAR>))
 
 import argparse
 from collections import OrderedDict
+from datetime import date
 from datetime import datetime
 from datetime import timedelta
 import glob
@@ -223,6 +227,8 @@ def main():
                     break
 
                 for extension in extensions.keys():
+                    today = date.today()
+
                     if ".{}<".format(extension) in resp.content.lower() and extension in archives:
                         directory = args.kdir
                         recursive = True
@@ -235,6 +241,8 @@ def main():
                     if not directory.endswith("/"):
                         directory = "{}/".format(directory)
 
+                    directory = "{}{}".format(directory, today)
+
                     print("[*] Download : {} ('Index of ' found)".format(
                         colored(url, "green", attrs=["bold"])
                     ))
@@ -245,7 +253,7 @@ def main():
             
                     try:
                         if directory == args.fdir:
-                            os.mkdir("{}{}".format(directory, domain))
+                            os.makedirs("{}{}".format(directory, domain))
 
                         wget_command = format_wget(timeout,
                                                    directory,
@@ -267,9 +275,12 @@ def main():
             if "Content-Type" not in resp.headers.keys():
                 directory = args.fdir
                 recursive = False
+                today     = date.today()
 
                 if not directory.endswith("/"):
                     directory = "{}/".format(directory)
+
+                directory = "{}{}".format(directory, today)
 
                 if os.path.exists("{}{}".format(directory, domain)):
                     print("[-] Skipping : {} (Directory '{}' already exists)".format(
@@ -293,7 +304,7 @@ def main():
                         break
 
                     try:
-                        os.mkdir("{}{}".format(directory, domain))
+                        os.makedirs("{}{}".format(directory, domain))
 
                         wget_command = format_wget(timeout,
                                                    directory,
@@ -315,9 +326,12 @@ def main():
             if resp.headers["Content-Type"].startswith(extensions[ext]) or url.endswith(".{}".format(ext)):
                 directory = args.fdir
                 recursive = False
+                today     = date.today()
 
                 if not directory.endswith("/"):
                     directory = "{}/".format(directory)
+
+                directory = "{}{}".format(directory, today)
 
                 if os.path.exists("{}{}".format(directory, domain)):
                     print("[-] Skipping : {} (Directory '{}' already exists)".format(
@@ -342,7 +356,7 @@ def main():
                     break
 
                 try:
-                    os.mkdir("{}{}".format(directory, domain))
+                    os.makedirs("{}{}".format(directory, domain))
 
                     wget_command = format_wget(timeout,
                                                directory,
@@ -439,8 +453,8 @@ def exception_message(err, url):
 def get_urls(delta, queries, qtype, ext, uagent, timeout, extensions):
     """Request URLs from urlscan.io"""
     # Get stopping point
-    today    = datetime.now()
-    timespan = datetime.strftime(today - timedelta(delta), "%a, %d %b %Y 05:00:00")
+    now      = datetime.now()
+    timespan = datetime.strftime(now - timedelta(delta), "%a, %d %b %Y 05:00:00")
     timespan = datetime.strptime(timespan, "%a, %d %b %Y %H:%M:%S")
 
     api  = "https://urlscan.io/api/v1/search/?q={}%20AND%20filename%3A.{}&size=10000"
@@ -490,6 +504,7 @@ def format_wget(timeout, directory, uagent, recursive, url):
         "--directory-prefix={}".format(directory),
         "--header='User-Agent: {}'".format(uagent),
         "--content-disposition",
+        "--no-check-certificate",
         "--no-parent"
     ]
 
