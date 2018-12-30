@@ -1,26 +1,27 @@
 #!/usr/bin/bash
 #
-# Description: Attempt to generate a report on what's found.
-# Usage      : bash report.sh DIRECTORY
+# Description: Attempt to generate a report on ZIP files found.
+# Usage      : bash report.sh PATH_TO_KitJackinSeason
 #
 
 
 echo "DateFound,ReferenceLink,ThreatActorEmail,EmailType,KitMailer,Target,PhishingDomain,KitName,ThreatActor,KitHash,KitUrl"
 
-for x in $(ls "$@" | grep -vE ".placeholder|^\.$|^\.\.$|md5sum\.report")
+find "$1" -name "*.zip" | sort | while read x
 do
     (
-        cd "$1/$x"
-
-        find -name *.rar -exec unrar e {} \; > /dev/null
-        find -name *.zip -exec unzip -qo {} \;
+        cd $(dirname "$x")
 
         touch .inv
+
+        # find -name *.rar -exec unrar e {} \; > /dev/null
+        find -maxdepth 1 -name *.zip -exec unzip -qo {} \;
+        find -name index.html?* -exec rm {} \;
 
         echo -e "\n########################################################\n" > pkt.report
 
         echo -e "DateFound" >> pkt.report
-        DateFound=$(date +%m/%d/%Y)
+        DateFound=$(echo "$x" | grep -oE "[0-9]{4}(\-[0-9]{2}){2}")
         echo "$DateFound" >> pkt.report
 
         echo -e "\nReferenceLink" >> pkt.report
@@ -36,8 +37,14 @@ do
                 sort -u | \
                 paste -sd "|" -
         )
-        echo "$ThreatActorEmail" >> pkt.report
-            
+        
+        if [[ "$ThreatActorEmail" == "" ]]
+        then
+            ThreatActorEmail="-"
+            echo "-" >> pkt.report
+        else
+            echo "$ThreatActorEmail" >> pkt.report
+        fi            
 
         echo -e "\nEmailType" >> pkt.report
         EmailType=$(
@@ -50,7 +57,14 @@ do
                 sort -u | \
                 paste -sd "|" -
         )
-        echo $EmailType >> pkt.report
+        
+        if [[ "$EmailType" == "" ]]
+        then
+            EmailType="-"
+            echo "-" >> pkt.report
+        else
+            echo "$EmailType" >> pkt.report
+        fi
         
 
         echo -e "\nKitMailer" >> pkt.report
@@ -62,7 +76,7 @@ do
         echo "$Target" >> pkt.report
 
         echo -e "\nPhishingDomain" >> pkt.report
-        PhishingDomain="$x"
+        PhishingDomain=$(dirname "$x" | rev | awk -F "/" '{print $1}' | rev)
         echo "$PhishingDomain" >> pkt.report
 
         echo -e "\nKitName" >> pkt.report
@@ -73,7 +87,14 @@ do
                 sort -u | \
                 paste -sd "|" -
         )
-        echo $KitName >> pkt.report
+        
+        if [[ "$KitName" == "" ]]
+        then
+            KitName="-"
+            echo "-" >> pkt.report
+        else
+            echo "$KitName" >> pkt.report
+        fi
 
         echo -e "\nThreatActor" >> pkt.report
         ThreatActor=$(
@@ -81,7 +102,14 @@ do
                 sort -u | \
                 paste -sd "|" -
         )
-        echo "$ThreatActor" >> pkt.report
+        
+        if [[ "$ThreatActor" == "" ]]
+        then
+            ThreatActor="-"
+            echo "-" >> pkt.report
+        else
+            echo "$ThreatActor" >> pkt.report
+        fi
 
         echo -e "\nKitHash" >> pkt.report
         KitHash=$(
@@ -90,15 +118,20 @@ do
                 sort -u | \
                 paste -sd "|" -
         )
-        echo "$KitHash" >> pkt.report
+        
+        if [[ "$KitHash" == "" ]]
+        then
+            KitHash="-"
+            echo "-" >> pkt.report
+        else
+            echo "$KitHash" >> pkt.report
+        fi
 
         echo -e "\nKitUrl" >> pkt.report
-        KitUrl="hxxps://$x/$(ls *.zip)"
-        echo "$KitUrl" >> pkt.report
+        KitUrl=$(echo "$x" | sed -e "s/.*KitJackinSeason\//hxxps:\/\//gi")
+        echo "hxxps://$KitUrl" >> pkt.report
 
         echo "$DateFound,$ReferenceLink,$ThreatActorEmail,$EmailType,$KitMailer,$Target,$PhishingDomain,$KitName,$ThreatActor,$KitHash,$KitUrl"
-
-        mv ../"${PWD##*/}" ../."${PWD##*/}"
 
         # ABUSE_EMAIL_RECIPIENT=$(
         #     echo "$x" | \
@@ -114,5 +147,5 @@ do
     )
 done
 
-find -name *.rar -exec md5sum {} \; | sort > "$1/md5sum.report"
+# find -name *.rar -exec md5sum {} \; | sort > "$1/md5sum.report"
 find -name *.zip -exec md5sum {} \; | sort >> "$1/md5sum.report"
