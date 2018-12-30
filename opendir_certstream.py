@@ -7,8 +7,9 @@ Description:
 - Recursively download the site when an open directory is found hosting a file with a particular extension
 
 Optional arguments:
-- --file-dir : Directory to use for interesting files detected
-- --kit-dir  : Directory to use for phishing kits detected
+- --file-dir : Directory to use for interesting files detected (default: ./InterestingFiles/)
+- --kit-dir  : Directory to use for phishing kits detected (default: ./KitJackinSeason/)
+- --log-nc   : File to store domains that have not been checked
 - --quiet    : Don't show wget output
 - --timeout  : Set time to wait for a connection
 - --tor      : Download files via the Tor network
@@ -25,13 +26,14 @@ Resources:
 Usage:
 
 ```
-python opendir_certstream.py [--file-dir] [--kit-dir] [--quiet] [--timeout] [--tor] [--verbose]
+python opendir_certstream.py [--file-dir] [--kit-dir] [--log-nc] [--quiet] [--timeout] [--tor] [--verbose]
 ```
 
 Debugger: open("/tmp/opendir.txt", "a").write("{}: <MSG>\n".format(<VAR>))
 """
 
 import argparse
+import datetime
 import os
 import Queue
 import re
@@ -60,12 +62,17 @@ parser.add_argument("--file-dir",
                     dest="fdir",
                     default="./InterestingFile/",
                     required=False,
-                    help="Directory to use for interesting files detected (default: ./InterestingFiles))")
+                    help="Directory to use for interesting files detected (default: ./InterestingFiles/)")
 parser.add_argument("--kit-dir",
                     dest="kdir",
                     default="./KitJackinSeason/",
                     required=False,
-                    help="Directory to use for phishing kits detected (default: ./KitJackinSeason))")
+                    help="Directory to use for phishing kits detected (default: ./KitJackinSeason/)")
+parser.add_argument("--log-nc",
+                    dest="log_nc",
+                    required=False,
+                    type=str,
+                    help="File to store domains that have not been checked")
 parser.add_argument("--quiet",
                     dest="quiet",
                     action="store_true",
@@ -150,6 +157,8 @@ class QueueManager(object):
                 extensions = suspicious["archives"].keys() + suspicious["files"].keys()
 
                 for ext in extensions:
+                    today = datetime.date.today()
+
                     if "{}<".format(ext) in resp.content.lower() and ext in suspicious["archives"]:
                         directory = args.kdir
 
@@ -165,6 +174,8 @@ class QueueManager(object):
 
                     if not directory.endswith("/"):
                         directory = "{}/".format(directory)
+
+                    directory = "{}{}".format(directory, today)
 
                     tqdm.tqdm.write(
                         "[*] Download  : "
@@ -224,6 +235,7 @@ def callback(message, context):
             
             if score < 75 or \
                  domain.startswith("www.") or \
+                 domain.startswith("STH-for-Google ") or \
                  domain.endswith("chat.kowari.macmoney.co.za") or \
                  domain.endswith("facebook.sitechs.net") or \
                  domain.endswith(".composedb.com") or \
@@ -233,6 +245,9 @@ def callback(message, context):
                  domain.endswith(".netflix.com") or \
                  domain.endswith(".playapps.download") or \
                  domain.endswith(".windows.net"):
+                if args.log_nc:
+                    with open(args.log_nc, "a") as log_nc:
+                        log_nc.write("{}\n".format(domain))
                 continue
 
             if score >= 120:
@@ -443,6 +458,7 @@ def format_wget(timeout, directory, uagent, url):
         "--directory-prefix={}".format(directory),
         "--header='User-Agent: {}'".format(uagent),
         "--content-disposition",
+        "--no-check-certificate",
         "--recursive",
         "--level=0",
         "--no-parent"
