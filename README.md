@@ -16,7 +16,7 @@ Search for specific filetypes submitted to [urlscan.io](https://urlscan.io/) and
 #### Setup  
 1. Open a terminal and run the following command:  
 ```bash
-git clone https://github.com/leunammejii/analyst_arsenal.git
+git clone https://github.com/ecstatic_nobel/analyst_arsenal.git
 mv analyst_arsenal-master analyst_arsenal
 cd analyst_arsenal
 bash py_pkg_update.sh
@@ -31,12 +31,15 @@ The following command will:
 - Recursively download the site when an open directory is found hosting a file with a particular extension  
 
 Optional arguments:  
-- **--quiet** : Don't show wget output  
-- **--timeout** : Set time to wait for a connection  
-- **--tor** : Download files via the Tor network  
-- **--verbose** : Show error messages  
+- **--file-dir** : Directory to use for interesting files detected (default: ./InterestingFiles/)  
+- **--kit-dir**  : Directory to use for phishing kits detected (default: ./KitJackinSeason/)  
+- **--log-nc**   : File to store domains that have not been checked  
+- **--quiet**    : Don't show wget output  
+- **--timeout**  : Set time to wait for a connection  
+- **--tor**      : Download files via the Tor network  
+- **--verbose**  : Show error messages  
 ```bash
-python opendir_certstream.py [--quiet] [--timeout] [--tor] [--verbose]
+python opendir_certstream.py [--file-dir] [--kit-dir] [--log-nc] [--quiet] [--timeout] [--tor] [--verbose]
 ```
 **Note**: Any URLs in the queue will be lost once the program stops.  
 
@@ -51,25 +54,48 @@ The following command will:
 - **File Extension** : 7z, apk, bat, bz, bz2, crypt, dll, doc, docx, exe, gz, hta, iso, jar, json, lnk, ppt, ps1, py, rar, sfx, sh, tar, vb, vbs, xld, xls, xlsx, zip   
 
 Optional arguments:  
-- **--dryrun** : Perform a test run to see what would be downloaded  
-- **--exclude** : A comma-separated list of domains to not download content from (ex. 'google.com,bing.com')  
-- **--quiet** : Don't show wget output  
-- **--timeout** : Set time to wait for a connection  
-- **--tor** : Download files via the Tor network  
-- **--verbose** : Show error messages  
+- **--dryrun**   : Perform a test run to see what would be downloaded  
+- **--exclude**  : A comma-separated list of domains to not download content from (ex. 'google.com,bing.com')  
+- **--file-dir** : Directory to use for interesting files detected (default: ./InterestingFiles/)  
+- **--kit-dir**  : Directory to use for phishing kits detected (default: ./KitJackinSeason/)  
+- **--quiet**    : Don't show wget output  
+- **--timeout**  : Set time to wait for a connection  
+- **--tor**      : Download files via the Tor network  
+- **--verbose**  : Show error messages  
 ```bash
-python opendir_urlscan.py <QUERY_TYPE> <DELTA> <FILE_EXTENSION> [--dry-run] [--exclude=CSV] [--quiet] [--timeout] [--tor] [--verbose]
+python opendir_urlscan.py <QUERY_TYPE> <DELTA> <FILE_EXTENSION> [--dry-run] [--exclude=CSV] [--file-dir] [--kit-dir] [--quiet] [--timeout] [--tor] [--verbose]
 ```
 **Note**: If the path is a file, it will be downloaded regardless of whether it's an open directory.  
 
 **Help**
-![opendir_urlscan - Help](https://github.com/leunammejii/analyst_arsenal/blob/master/static/assets/opendir_urlscan_help.png)  
+![opendir_urlscan - Help](https://github.com/ecstatic_nobel/analyst_arsenal/blob/master/static/assets/opendir_urlscan_help.png)  
 
 **Dry Run**
-![opendir_urlscan - Dry Run](https://github.com/leunammejii/analyst_arsenal/blob/master/static/assets/opendir_urlscan_dryrun.png)  
+![opendir_urlscan - Dry Run](https://github.com/ecstatic_nobel/analyst_arsenal/blob/master/static/assets/opendir_urlscan_dryrun.png)  
 
 **Download**
-![opendir_urlscan - Download](https://github.com/leunammejii/analyst_arsenal/blob/master/static/assets/opendir_urlscan_download.png)  
+![opendir_urlscan - Download](https://github.com/ecstatic_nobel/analyst_arsenal/blob/master/static/assets/opendir_urlscan_download.png)  
+
+**opendir_whoisds**  
+- Download a list of newly registered domains from WHOIS Domain Search (whoisds.com)  
+- Score and add suspicious domains to a queue while other domains continue to be scored  
+- Simultaneously make requests to the domains in the queue to search for predefined file extensions  
+- Recursively download the site when an open directory is found hosting a file with a particular extension  
+
+1 positional argument needed:  
+- **Delta** : Number of days back to search (GMT)  
+
+Optional arguments:  
+- **--file-dir** : Directory to use for interesting files detected (default: ./InterestingFiles/)  
+- **--kit-dir**  : Directory to use for phishing kits detected (default: ./KitJackinSeason/)  
+- **--log-nc**   : File to store domains that have not been checked  
+- **--quiet**    : Don't show wget output  
+- **--timeout**  : Set time to wait for a connection  
+- **--tor**      : Download files via the Tor network  
+- **--verbose**  : Show error messages  
+```bash
+python opendir_whoisds.py <DELTA> [--file-dir] [--kit-dir] [--log-nc] [--quiet] [--timeout] [--tor] [--verbose]
+```
 
 #### Things to know  
 - Be responsible!!!  
