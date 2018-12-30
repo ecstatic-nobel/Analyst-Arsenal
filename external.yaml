@@ -16,7 +16,6 @@ files:
 # Add your own file extensions here e.g.:
 #    '.exe':
 #    '.ps1':
-    'apk': 'application/java-archive'
     'bat': 'donotcheck'
     'dll': 'application/x-dosexec'
     'doc': 'application/msword'
