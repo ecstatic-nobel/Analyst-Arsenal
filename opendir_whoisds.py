@@ -121,6 +121,7 @@ def main():
     show_summary()
     show_network(uagent, timeout)
     domains = get_domains()
+    rd_count = len(domains)
 
     # Read suspicious.yaml and external.yaml
     with open("suspicious.yaml", "r") as f:
@@ -155,12 +156,13 @@ def main():
             if key not in suspicious.keys() or suspicious[key] is None:
                 external_error(key, "suspicious")
 
-    print(colored("Scoring the domains...\n", "yellow", attrs=["bold"]))
+    print(colored("Scoring {} domains...\n".format(rd_count), "yellow", attrs=["bold"]))
     global pbar
     pbar = tqdm.tqdm(desc="domain_update", unit="domain")
     suspicious_domains = return_suspicious(domains)
+    sd_count = len(suspicious_domains)
 
-    print(colored("\n\nChecking suspicious domains...\n", "yellow", attrs=["bold"]))
+    print(colored("\n\nChecking {} suspicious domains...\n".format(sd_count), "yellow", attrs=["bold"]))
     for suspicious_domain in suspicious_domains:
         url = "http://{}".format(suspicious_domain)
         check_url(url)
