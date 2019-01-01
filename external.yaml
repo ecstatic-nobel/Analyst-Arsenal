@@ -25,7 +25,6 @@ files:
     'iso': 'application/octet-stream'
     'jar': 'application/java-archive'
     'lnk': 'application/octet-stream'
-    'php': 'donotcheck'
     'ppt': 'application/vnd.ms-powerpoint'
     'ps1': 'donotcheck'
     'py': 'donotcheck'
