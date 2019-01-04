@@ -1,8 +1,20 @@
 #!/usr/bin/python
 """
+Credit:
+    https://github.com/ninoseki/miteru
+    https://github.com/x0rz/phishing_catcher
 
+Resources:
+    http://docs.python-requests.org/en/master/user/advanced/#proxies
+    http://sebastiandahlgren[.]se/2014/06/27/running-a-method-as-a-background-thread-in-python/
+    https://ec.haxx.se/libcurl-proxies.html
+    https://gist.github.com/jefftriplett/9748036
+    https://trac.torproject.org/projects/tor/wiki/doc/torsocks
+    https://urlscan.io/search/#*
+    https://whoisds.com/newly-registered-domains
 """
 
+import glob
 import os
 import re
 import subprocess
@@ -49,10 +61,15 @@ class DomainQueueManager():
             domain = self.domain_queue.get()
             score  = score_domain(self.suspicious, domain.lower(), self.args)
 
+            match_found = False
             for exclusion in self.exclusions:
                 if exclusion.match(domain):
-                    self.domain_queue.task_done()
-                    continue
+                    match_found = True
+                    break
+            
+            if match_found:
+                self.domain_queue.task_done()
+                continue
             
             if score < 75:
                 if self.args.log_nc:
@@ -79,6 +96,141 @@ class DomainQueueManager():
         return
 
 # hxxp://sebastiandahlgren[.]se/2014/06/27/running-a-method-as-a-background-thread-in-python/
+class RecursiveQueueManager():
+    """
+    The run() method will be started and it will run in the background
+    until the application exits.
+    """
+
+    def __init__(self, args, recursion_queue, exclusions, proxies, uagent, extensions, suspicious, day, torsocks):
+        """ """
+        self.args             = args
+        self.recursion_queue  = recursion_queue
+        self.exclusions       = exclusions
+        self.proxies          = proxies
+        self.uagent           = uagent
+        self.extensions       = extensions
+        self.suspicious       = suspicious
+        self.day              = day
+        self.torsocks         = torsocks
+
+        for thread in range(self.args.threads):
+            worker = threading.Thread(target=self.check_site)
+            worker.daemon = True
+            worker.start()
+
+    def check_site(self):
+        """ """
+        while True:
+            url = self.recursion_queue.get()
+
+            # Check if the current URL has already been redirected to
+            if "redirect" in vars() and redirect == url:
+                del redirect
+                continue
+
+            # Split URL into parts
+            split_url = url.split("/")
+            protocol  = split_url[0]
+            domain    = split_url[2].split(":")[0]
+
+            match_found = False
+            for exclusion in self.exclusions:
+                if exclusion.match(domain):
+                    match_found = True
+                    break
+            
+            if match_found:
+                tqdm.tqdm.write("[*] Excluded : {}".format(colored(url, "red")))
+                self.recursion_queue.task_done()
+                continue
+
+            tqdm.tqdm.write("[*] Original : {}".format(colored(url, "cyan")))
+            url = "//".join([protocol, domain])
+
+            # Build list of URL resources
+            resources = split_url[3:]
+            resources = ['/{}'.format(x) for x in resources]
+            resources.insert(0, "")
+
+            for resource in resources:
+                # Combine current URL and resource
+                url = "{}{}".format(url, resource)
+
+                # Send first request to the URL
+                tqdm.tqdm.write("[*] Session  : {}".format(colored(url, "blue")))
+
+                try:
+                    resp = requests.get(url,
+                                        proxies=self.proxies,
+                                        headers={"User-Agent": self.uagent},
+                                        timeout=self.args.timeout,
+                                        allow_redirects=True)
+                except Exception as err:
+                    failed_message(self.args, err, url)
+                    continue
+
+                if resp.status_code != 200 or "wordpress/<" in resp.content:
+                    continue
+
+                if glob.glob("./*/{}/{}".format(self.day, domain)):
+                    tqdm.tqdm.write("[-] Skipping : {} (Directory '{}' already exists)".format(
+                        colored(url, "red"),
+                        domain
+                    ))
+                    break
+
+                # An open directory is found
+                if "Index of " in resp.content:
+                    for extension in self.extensions.keys():
+                        if ".{}<".format(extension) in resp.content.lower() and extension in self.suspicious["archives"]:
+                            directory = "{}{}/".format(self.args.kit_dir, self.day)
+                        elif ".{}<".format(self.args.ext) in resp.content.lower() and extension in self.suspicious["files"]:
+                            directory = "{}{}/".format(self.args.file_dir, self.day)
+                        else:
+                            continue
+
+                        download_message("('Index of ' found)", url)
+
+                        action = download_site(directory, domain, self.args, self.uagent, self.torsocks, url)
+                        if action == "break":
+                            break
+                        elif action == "continue":
+                            continue
+
+                # A URL is found ending in the specified extension but the server responded with no Content-Type
+                if "Content-Type" not in resp.headers.keys():
+                    directory = "{}{}/".format(self.args.file_dir, self.day)
+
+                    if url.endswith('.{}'.format(self.args.ext)):
+                        if resp.url != url:
+                            redirect = redirect_message(resp)
+                        else:
+                            download_message("(Responded with no Content-Type)", url)
+
+                        action = download_site(directory, domain, self.args, self.uagent, self.torsocks, url)
+                        if action == "break":
+                            break
+                        elif action == "continue":
+                            continue
+
+                # A file is found with the Mime-Type of the specified extension
+                if resp.headers["Content-Type"].startswith(self.extensions[self.args.ext]) or url.endswith(".{}".format(self.args.ext)):
+                    directory = "{}{}/".format(self.args.file_dir, self.day)
+
+                    if resp.url != url:
+                        redirect = redirect_message(resp)
+                    else:
+                        download_message("({} found)".format(self.args.ext), url)
+                    
+                    action = download_site(directory, domain, self.args, self.uagent, self.torsocks, url)
+                    if action == "break":
+                        break
+                    elif action == "continue":
+                        continue
+            self.recursion_queue.task_done()
+        return
+
 class UrlQueueManager():
     """
     The run() method will be started and it will run in the background
@@ -140,8 +292,7 @@ class UrlQueueManager():
                 else:
                     continue
 
-                tqdm.tqdm.write("[*] Download  : {} ('Index of ' found)".format(
-                        colored(url, "green", attrs=["bold"])))
+                download_message("('Index of ' found)", url)
 
                 try:
                     if not os.path.exists(directory):
@@ -160,8 +311,7 @@ class UrlQueueManager():
 
                     subprocess.call(wget_command)
 
-                    tqdm.tqdm.write("[*] Complete  : {}".format(
-                            colored(url, "green", attrs=["bold", "underline"])))
+                    complete_message(url)
                     break
                 except Exception as err:
                     failed_message(self.args, err, url)
@@ -169,6 +319,39 @@ class UrlQueueManager():
 
             self.url_queue.task_done()
         return
+
+def complete_message(url):
+    """ """
+    tqdm.tqdm.write("[*] Complete : {}".format(
+        colored(url, "green", attrs=["bold", "underline"])
+    ))
+    return
+
+def download_message(comment, url):
+    """ """
+    tqdm.tqdm.write("[*] Download  : {} {}".format(
+        colored(url, "green", attrs=["bold"]), comment))
+    return
+
+def download_site(directory, domain, args, uagent, torsocks, url):
+    """ """
+    try:
+        if not os.path.exists(directory):
+            os.makedirs("{}{}".format(directory, domain))
+
+        wget_command = format_wget(args,
+                                   directory,
+                                   uagent,
+                                   torsocks,
+                                   url)
+
+        subprocess.call(wget_command)
+
+        complete_message(url)
+        return "break"
+    except Exception as err:
+        failed_message(args, err, url)
+        return "continue"
 
 def external_error(key, filename):
     """ """
@@ -182,7 +365,7 @@ def external_error(key, filename):
 def failed_message(args, err, message):
     """ """
     if args.verbose:
-        tqdm.tqdm.write("[!] Error    : {}".format(
+        tqdm.tqdm.write("[!] Error     : {}".format(
             colored(err, "red", attrs=["bold", "underline"])
         ))
 
@@ -260,6 +443,14 @@ def read_externals():
             suspicious[key] = external[key]
     return suspicious
 
+def read_file(input_file):
+    """ """
+    open_file = open(input_file, "r")
+    contents  = open_file.read().splitlines()
+    open_file.close()
+
+    return contents
+
 def recompile_exclusions(regex_exclusions):
     """ """
     exclusions = []
@@ -267,6 +458,14 @@ def recompile_exclusions(regex_exclusions):
     for exclusion in regex_exclusions:
         exclusions.append(re.compile(exclusion, re.IGNORECASE))
     return exclusions
+
+def redirect_message(resp):
+    """ """
+    redirect = resp.url
+    tqdm.tqdm.write("[*] Redirect : {} (Responded with no Content-Type)".format(
+        colored(redirect, "green")
+    ))
+    return redirect
 
 def score_domain(suspicious, domain, args):
     """ """
