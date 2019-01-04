@@ -6,6 +6,7 @@ Description:
 
 3 positional arguments needed:
 - Input File : Path to the file containing URLs
+- File Extension : 7z, apk, bat, bz, bz2, crypt, dll, doc, docx, exe, gz, hta, iso, jar, json, lnk, ppt, ps1, py, rar, sfx, sh, tar, vb, vbs, xld, xls, xlsx, zip
 
 Optional arguments:
 - --file-dir : Directory to use for interesting files detected (default: ./InterestingFiles/)
@@ -50,6 +51,10 @@ parser = argparse.ArgumentParser(description="Attempt to detect phishing kits an
 parser.add_argument(metavar="input file",
                     dest="input_file",
                     help="Path to the file containing URLs")
+parser.add_argument(metavar="file extension",
+                    dest="ext",
+                    choices=["7z", "apk", "bat", "bz", "bz2", "crypt", "dll", "doc", "docx", "exe", "gz", "hta", "iso", "jar", "json", "lnk", "ppt", "ps1", "py", "rar", "sfx", "sh", "tar", "vb", "vbs", "xld", "xls", "xlsx", "zip"],
+                    help="7z, apk, bat, bz, bz2, crypt, dll, doc, docx, exe, gz, hta, iso, jar, json, lnk, ppt, ps1, py, rar, sfx, sh, tar, vb, vbs, xld, xls, xlsx, zip")
 parser.add_argument("--file-dir",
                     dest="file_dir",
                     default="./InterestingFile/",
@@ -113,11 +118,6 @@ def main():
     # Get today's date
     day = date.today()
 
-    # Get stopping point
-    now      = datetime.now()
-    timespan = datetime.strftime(now - timedelta(args.delta), "%a, %d %b %Y 05:00:00")
-    timespan = datetime.strptime(timespan, "%a, %d %b %Y %H:%M:%S")
-
     # Read suspicious.yaml and external.yaml
     suspicious = commons.read_externals()
 
@@ -143,6 +143,9 @@ def main():
 
     # Process URLs
     for url in urls:
+        if not (url.startswith("http://") or url.startswith("https://")):
+            continue
+
         recursion_queue.put(url)
 
     recursion_queue.join()
