@@ -17,14 +17,6 @@ Optional arguments:
 - --tor      : Download files via the Tor network
 - --verbose  : Show error messages
 
-Credit: https://github.com/x0rz/phishing_catcher
-
-Resources:
-    http://docs.python-requests.org/en/master/user/advanced/#proxies
-    https://gist.github.com/jefftriplett/9748036
-    https://ec.haxx.se/libcurl-proxies.html
-    https://trac.torproject.org/projects/tor/wiki/doc/torsocks
-
 Usage:
 
 ```
@@ -168,14 +160,11 @@ def main():
     global exclusions
     global pbar
 
-    # Create queues
-    url_queue = Queue.Queue()
-
     # Print start messages
     commons.show_summary(args)
     proxies, torsocks = commons.show_network(args, uagent)
 
-    # Get dates
+    # Get today's date
     day = date.today()
 
     # Read suspicious.yaml and external.yaml
@@ -192,7 +181,9 @@ def main():
         print(colored("Either the file or kit directory is temporarily unavailable. Exiting!", "red", attrs=["underline"]))
         exit()
 
+    # Create queues
     print(colored("Starting queue...\n", "yellow", attrs=["bold"]))
+    url_queue = Queue.Queue()
     commons.UrlQueueManager(args, url_queue, proxies, uagent, suspicious, day, torsocks)
 
     try:

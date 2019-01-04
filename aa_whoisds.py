@@ -20,15 +20,6 @@ Optional arguments:
 - --tor      : Download files via the Tor network
 - --verbose  : Show error messages
 
-Credit: https://github.com/x0rz/phishing_catcher
-
-Resources:
-    https://whoisds.com/newly-registered-domains
-    http://docs.python-requests.org/en/master/user/advanced/#proxies
-    https://gist.github.com/jefftriplett/9748036
-    https://ec.haxx.se/libcurl-proxies.html
-    https://trac.torproject.org/projects/tor/wiki/doc/torsocks
-
 Usage:
 
 ```
@@ -174,10 +165,6 @@ def main():
     global suspicious
     global exclusions
 
-    # Create queues
-    domain_queue = Queue.Queue()
-    url_queue = Queue.Queue()
-
     # Print start messages
     commons.show_summary(args)
     proxies, torsocks = commons.show_network(args, uagent)
@@ -198,7 +185,10 @@ def main():
     else:
         exclusions = []
 
+    # Create queues
     print(colored("Starting the queues...\n", "yellow", attrs=["bold"]))
+    domain_queue = Queue.Queue()
+    url_queue    = Queue.Queue()
     commons.DomainQueueManager(args, domain_queue, suspicious, exclusions, url_queue)
     commons.UrlQueueManager(args, url_queue, proxies, uagent, suspicious, day, torsocks)
 
