@@ -120,7 +120,7 @@ def main():
     commons.UrlQueueManager(args, url_queue, uagent)
 
     # Get domains
-    domains = commons.get_domains(args)
+    domains = commons.get_domains(uagent, args)
 
     print(colored("Scoring and checking the domains...\n", "yellow", attrs=["bold"]))
     for domain in domains:
