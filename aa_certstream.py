@@ -159,10 +159,6 @@ def callback(message, context):
             with open("queue_file.txt", "a") as queue_state:
                 queue_state.write("{}\n".format(url))
 
-def on_error(instance):
-    """Instance is the CertStreamClient instance that was opened"""
-    pass
-
 def on_open(instance):
     """Instance is the CertStreamClient instance that was opened"""
     global pbar
@@ -215,8 +211,7 @@ def main():
     certstream.listen_for_events(
         message_callback=callback,
         url="wss://certstream.calidog.io",
-        on_open=on_open,
-        on_error=on_error
+        on_open=on_open
     )
 
 if __name__ == "__main__":
