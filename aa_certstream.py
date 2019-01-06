@@ -20,25 +20,19 @@ Optional arguments:
 Usage:
 
 ```
-python opendir_certstream.py [--file-dir] [--kit-dir] [--log-nc] [--quiet] [--timeout] [--tor] [--verbose]
+python opendir_certstream.py [--file-dir] [--kit-dir] [--level] [--log-nc] [--quiet] [--threads] [--timeout] [--tor] [--verbose]
 ```
 
 Debugger: open("/tmp/opendir.txt", "a").write("{}: <MSG>\n".format(<VAR>))
 """
 
 import argparse
-from datetime import date
 import os
-import Queue
 import sys
 
 script_path = os.path.dirname(os.path.realpath(__file__)) + "/_tp_modules"
 sys.path.insert(0, script_path)
 import certstream
-import requests
-from requests.packages.urllib3.exceptions import InsecureRequestWarning
-requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
-import subprocess
 from termcolor import colored, cprint
 import tqdm
 
@@ -46,7 +40,9 @@ import commons
 
 
 # Parse Arguments
-parser = argparse.ArgumentParser(description="Attempt to detect phishing kits and open directories via Certstream.")
+parser = argparse.ArgumentParser(
+    description="Attempt to detect phishing kits and open directories via Certstream."
+)
 parser.add_argument("--file-dir",
                     dest="file_dir",
                     default="./InterestingFile/",
@@ -103,100 +99,125 @@ args = commons.fix_directory(args)
 
 def callback(message, context):
     """Callback handler for certstream events."""
-    if message["message_type"] == "heartbeat":
-        return
-
     if message["message_type"] == "certificate_update":
         all_domains = message["data"]["leaf_cert"]["all_domains"]
 
-        for domain in all_domains:
-            pbar.update(1)
+        if len(all_domains) == 0:
+            return
+        else:
+            domain = all_domains[0]
 
-            if domain.startswith("*."):
-                continue
+        if domain.startswith("*."):
+            return
 
-            score = commons.score_domain(suspicious, domain.lower(), args)
+        match_found = False
+        for exclusion in exclusions:
+            if exclusion.match(domain):
+                match_found = True
+                break
+        
+        if match_found:
+            return
 
-            if "Let's Encrypt" in message["data"]["chain"][0]["subject"]["aggregated"]:
-                score += 10
+        pbar.update(1)
 
-            match_found = False
-            for exclusion in exclusions:
-                if exclusion.match(domain):
-                    match_found = True
-                    break
-            
-            if match_found:
-                continue
-            
-            if score < 75:
-                if args.log_nc:
-                    with open(args.log_nc, "a") as log_nc:
-                        log_nc.write("{}\n".format(domain))
-                continue
+        score = commons.score_domain(suspicious, domain.lower(), args)
 
-            if score >= 120:
-                tqdm.tqdm.write("[!] Suspicious: {} (score={})".format(colored(domain, "red", attrs=["underline", "bold"]), score))
-            elif score >= 90:
-                tqdm.tqdm.write("[!] Suspicious: {} (score={})".format(colored(domain, "yellow", attrs=["underline"]), score))
-            elif score >= 75:
-                tqdm.tqdm.write("[!] Likely    : {} (score={})".format(colored(domain, "cyan", attrs=["underline"]), score))
+        if "Let's Encrypt" in message["data"]["chain"][0]["subject"]["aggregated"]:
+            score += 10
+        
+        if score < 75:
+            if args.log_nc:
+                with open(args.log_nc, "a") as log_nc:
+                    log_nc.write("{}\n".format(domain))
+            return
 
-            url = "https://{}".format(domain)
+        if score >= 120:
+            tqdm.tqdm.write(
+                "[!] Suspicious: {} (score={})".format(
+                    colored(domain, "red", attrs=["underline", "bold"]), score
+                )
+            )
+        elif score >= 90:
+            tqdm.tqdm.write(
+                "[!] Suspicious: {} (score={})".format(
+                    colored(domain, "yellow", attrs=["underline"]), score
+                )
+            )
+        elif score >= 75:
+            tqdm.tqdm.write(
+                "[!] Likely    : {} (score={})".format(
+                    colored(domain, "cyan", attrs=["underline"]), score
+                )
+            )
 
-            if not url in list(url_queue.queue):
-                url_queue.put(url)
+        url = "https://{}".format(domain)
 
-                with open("queue_file.txt", "a") as qfile:
-                    qfile.write("{}\n".format(url))
+        if not url in list(url_queue.queue):
+            url_queue.put(url)
+
+            with open("queue_file.txt", "a") as queue_state:
+                queue_state.write("{}\n".format(url))
+
+def on_error(instance):
+    """Instance is the CertStreamClient instance that was opened"""
+    pass
+
+def on_open(instance):
+    """Instance is the CertStreamClient instance that was opened"""
+    global pbar
+
+    print(colored("Connection successfully established!\n", "yellow", attrs=["bold"]))
+
+    if os.path.exists("queue_file.txt"):
+        try:
+            with open("queue_file.txt", "r") as queue_state:
+                urls = queue_state.read().splitlines()
+
+                if len(urls) > 0:
+                    print(colored("Previous queue state found. Reloading...\n", "yellow", attrs=["bold"]))
+
+                for url in urls:
+                    url_queue.put(url)
+        except Exception as err:
+            commons.failed_message(args, err, None)
+
+    pbar = tqdm.tqdm(desc="certificate_update", unit="cert")
+    return
 
 def main():
     """ """
-    # Create globals
-    global url_queue
-    global proxies
-    global torsocks
-    global suspicious
     global exclusions
-    global pbar
+    global suspicious
+    global url_queue
+
+    # Check if output directories exist
+    commons.check_path(args)
 
     # Print start messages
     commons.show_summary(args)
-    proxies, torsocks = commons.show_network(args, uagent)
-
-    # Get today's date
-    day = date.today()
+    commons.show_networking(args, uagent)
 
     # Read suspicious.yaml and external.yaml
     suspicious = commons.read_externals()
 
     # Recompile exclusions
-    if "exclusions" in suspicious.keys():
-        exclusions = commons.recompile_exclusions(suspicious["exclusions"])
-    else:
-        exclusions = []
-
-    # Start queue and listen for events via Certstream
-    if not (os.path.exists(args.kit_dir) or os.path.exists(args.file_dir)):
-        print(colored("Either the file or kit directory is temporarily unavailable. Exiting!", "red", attrs=["underline"]))
-        exit()
+    exclusions = commons.recompile_exclusions()
 
     # Create queues
-    print(colored("Starting queue...\n", "yellow", attrs=["bold"]))
-    url_queue = Queue.Queue()
-    commons.UrlQueueManager(args, url_queue, proxies, uagent, suspicious, day, torsocks)
+    url_queue = commons.create_queue("url_queue")
 
-    try:
-        print(colored("Attempting to reload the previous queue...\n", "yellow", attrs=["bold"]))
-        with open("queue_file.txt", "r") as qfile:
-            for url in qfile.read().splitlines():
-                url_queue.put(url)
-    except Exception as err:
-        commons.failed_message(args, err, None)
+    # Create threads
+    commons.UrlQueueManager(args, url_queue, uagent)
 
+    # Listen for events via Certstream
     print(colored("Connecting to Certstream...\n", "yellow", attrs=["bold"]))
-    pbar = tqdm.tqdm(desc="certificate_update", unit="cert")
-    certstream.listen_for_events(callback, url="wss://certstream.calidog.io")
+    certstream.listen_for_events(
+        message_callback=callback,
+        url="wss://certstream.calidog.io",
+        on_open=on_open,
+        on_error=on_error
+    )
 
 if __name__ == "__main__":
     main()

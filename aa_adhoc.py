@@ -28,20 +28,6 @@ Debugger: open("/tmp/opendir.txt", "a").write("{}: <MSG>\n".format(<VAR>))
 """
 
 import argparse
-from collections import OrderedDict
-from datetime import date
-from datetime import datetime
-from datetime import timedelta
-import os
-import Queue
-import subprocess
-import sys
-
-script_path = os.path.dirname(os.path.realpath(__file__)) + "/_tp_modules"
-sys.path.insert(0, script_path)
-import requests
-from termcolor import colored, cprint
-import yaml
 
 import commons
 
@@ -101,31 +87,20 @@ parser.add_argument("--verbose",
 args = parser.parse_args()
 uagent = "Mozilla/5.0 (Windows NT 6.3; Trident/7.0; rv:11.0) like Gecko"
 
-# Fix directory names
-args = commons.fix_directory(args)
-
 def main():
     """ """
-    # Set globals
-    global proxies
-    global torsocks
-    global timespan
+    # Check if output directories exist
+    commons.check_path(args)
 
     # Print start messages
     commons.show_summary(args)
-    proxies, torsocks = commons.show_network(args, uagent)
-
-    # Get today's date
-    day = date.today()
+    commons.show_networking(args, uagent)
 
     # Read suspicious.yaml and external.yaml
     suspicious = commons.read_externals()
 
     # Recompile exclusions
-    if "exclusions" in suspicious.keys():
-        exclusions = commons.recompile_exclusions(suspicious["exclusions"])
-    else:
-        exclusions = []
+    commons.recompile_exclusions()
 
     # Build dict of extensions
     extensions = {}
@@ -133,13 +108,13 @@ def main():
     extensions.update(suspicious["files"])
 
     # Read file containing URLs
-    print(colored("Reading file containing URLs...\n", "yellow", attrs=["bold"]))
     urls = commons.read_file(args.input_file)
 
     # Create queues
-    print(colored("Starting queue...\n", "yellow", attrs=["bold"]))
-    recursion_queue = Queue.Queue()
-    commons.RecursiveQueueManager(args, recursion_queue, exclusions, proxies, uagent, extensions, suspicious, day, torsocks)
+    recursion_queue = commons.create_queue("recursion_queue")
+
+    # Create threads
+    commons.RecursiveQueueManager(args, recursion_queue, uagent, extensions)
 
     # Process URLs
     for url in urls:

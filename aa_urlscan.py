@@ -29,20 +29,11 @@ Debugger: open("/tmp/opendir.txt", "a").write("{}: <MSG>\n".format(<VAR>))
 """
 
 import argparse
-from collections import OrderedDict
-from datetime import date
-from datetime import datetime
-from datetime import timedelta
 import os
-import Queue
-import subprocess
 import sys
 
 script_path = os.path.dirname(os.path.realpath(__file__)) + "/_tp_modules"
 sys.path.insert(0, script_path)
-import requests
-from termcolor import colored, cprint
-import yaml
 
 import commons
 
@@ -103,79 +94,23 @@ parser.add_argument("--verbose",
                     action="store_true",
                     required=False,
                     help="Show error messages")
-args = parser.parse_args()
+args   = parser.parse_args()
 uagent = "Mozilla/5.0 (Windows NT 6.3; Trident/7.0; rv:11.0) like Gecko"
-
-# Fix directory names
-args = commons.fix_directory(args)
-
-def query_urlscan(args, queries, uagent, extensions):
-    """Request URLs from urlscan.io"""
-    api  = "https://urlscan.io/api/v1/search/?q={}%20AND%20filename%3A.{}&size=10000"
-    resp = requests.get(api.format(queries[args.query_type], args.ext),
-                        proxies=proxies,
-                        headers={"User-Agent": uagent},
-                        timeout=args.timeout,
-                        allow_redirects=True)
-
-    try:
-        if not (resp.status_code == 200 and "results" in resp.json().keys()):
-            raise Exception
-    except Exception as err:
-        commons.failed_message(args, err, None)
-        exit()
-
-    results = resp.json()["results"]
-    urls    = []
-
-    for result in results:
-        # Break at delta specified
-        analysis_time = datetime.strptime(result["task"]["time"], "%Y-%m-%dT%H:%M:%S.%fZ")
-
-        if analysis_time < timespan:
-            break
-
-        url = result["page"]["url"]
-
-        # Build list of URLs ending with specified extension or Mime-Type
-        if url.endswith('.{}'.format(args.ext)):
-            urls.append(url)
-            continue
-    
-        if "files" in result.keys():
-            for filename in result["files"]:
-                if filename["mimeType"].startswith(extensions[args.ext]):
-                    urls.append(url)
-                    break
-    return urls
 
 def main():
     """ """
-    # Set globals
-    global proxies
-    global torsocks
-    global timespan
+    # Check if output directories exist
+    commons.check_path(args)
 
     # Print start messages
     commons.show_summary(args)
-    proxies, torsocks = commons.show_network(args, uagent)
-
-    # Get today's date
-    day = date.today()
-
-    # Get stopping point
-    now      = datetime.now()
-    timespan = datetime.strftime(now - timedelta(args.delta), "%a, %d %b %Y 05:00:00")
-    timespan = datetime.strptime(timespan, "%a, %d %b %Y %H:%M:%S")
+    commons.show_networking(args, uagent)
 
     # Read suspicious.yaml and external.yaml
     suspicious = commons.read_externals()
 
     # Recompile exclusions
-    if "exclusions" in suspicious.keys():
-        exclusions = commons.recompile_exclusions(suspicious["exclusions"])
-    else:
-        exclusions = []
+    commons.recompile_exclusions()
 
     # Build dict of extensions
     extensions = {}
@@ -183,13 +118,13 @@ def main():
     extensions.update(suspicious["files"])
 
     # Request URLs from urlscan.io
-    print(colored("Querying urlscan.io for URLs based on provided parameters...\n", "yellow", attrs=["bold"]))
-    urls = query_urlscan(args, suspicious["queries"], uagent, extensions)
+    urls = commons.query_urlscan(args, suspicious["queries"], uagent, extensions)
 
     # Create queues
-    print(colored("Starting queue...\n", "yellow", attrs=["bold"]))
-    recursion_queue = Queue.Queue()
-    commons.RecursiveQueueManager(args, recursion_queue, exclusions, proxies, uagent, extensions, suspicious, day, torsocks)
+    recursion_queue = commons.create_queue("recursion_queue")
+
+    # Create threads
+    commons.RecursiveQueueManager(args, recursion_queue, uagent, extensions)
 
     # Process URLs
     for url in urls:

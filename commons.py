@@ -14,19 +14,28 @@ Resources:
     https://whoisds.com/newly-registered-domains
 """
 
+import base64
+from datetime import date
+from datetime import datetime
+from datetime import timedelta
 import glob
 import os
+import Queue
 import re
 import subprocess
 import sys
 import threading
 import time
+import zipfile
 
 script_path = os.path.dirname(os.path.realpath(__file__)) + "/_tp_modules"
 sys.path.insert(0, script_path)
 import entropy
 from Levenshtein import distance
 import requests
+from requests.packages.urllib3.exceptions import InsecureRequestWarning
+requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
+import subprocess
 from termcolor import colored, cprint
 from tld import get_tld
 import tqdm
@@ -35,19 +44,16 @@ import yaml
 from confusables import unconfuse
 
 
-# hxxp://sebastiandahlgren[.]se/2014/06/27/running-a-method-as-a-background-thread-in-python/
 class DomainQueueManager():
     """
     The run() method will be started and it will run in the background
     until the application exits.
     """
 
-    def __init__(self, args, domain_queue, suspicious, exclusions, url_queue):
+    def __init__(self, args, domain_queue, url_queue):
         """ """
         self.args         = args
         self.domain_queue = domain_queue
-        self.suspicious   = suspicious
-        self.exclusions   = exclusions
         self.url_queue    = url_queue
 
         for thread in range(self.args.threads):
@@ -59,10 +65,10 @@ class DomainQueueManager():
         """ """
         while True:
             domain = self.domain_queue.get()
-            score  = score_domain(self.suspicious, domain.lower(), self.args)
+            score  = score_domain(suspicious, domain.lower(), self.args)
 
             match_found = False
-            for exclusion in self.exclusions:
+            for exclusion in exclusions:
                 if exclusion.match(domain):
                     match_found = True
                     break
@@ -95,24 +101,21 @@ class DomainQueueManager():
             self.domain_queue.task_done()
         return
 
-# hxxp://sebastiandahlgren[.]se/2014/06/27/running-a-method-as-a-background-thread-in-python/
 class RecursiveQueueManager():
     """
     The run() method will be started and it will run in the background
     until the application exits.
     """
 
-    def __init__(self, args, recursion_queue, exclusions, proxies, uagent, extensions, suspicious, day, torsocks):
+    def __init__(self, args, recursion_queue, uagent, extensions):
         """ """
         self.args             = args
         self.recursion_queue  = recursion_queue
-        self.exclusions       = exclusions
-        self.proxies          = proxies
         self.uagent           = uagent
         self.extensions       = extensions
-        self.suspicious       = suspicious
-        self.day              = day
-        self.torsocks         = torsocks
+        self.day              = date.today()
+
+        print(colored("Creating {} threads...\n".format(self.args.threads), "yellow", attrs=["bold"]))
 
         for thread in range(self.args.threads):
             worker = threading.Thread(target=self.check_site)
@@ -135,7 +138,7 @@ class RecursiveQueueManager():
             domain    = split_url[2].split(":")[0]
 
             match_found = False
-            for exclusion in self.exclusions:
+            for exclusion in exclusions:
                 if exclusion.match(domain):
                     match_found = True
                     break
@@ -162,7 +165,7 @@ class RecursiveQueueManager():
 
                 try:
                     resp = requests.get(url,
-                                        proxies=self.proxies,
+                                        proxies=proxies,
                                         headers={"User-Agent": self.uagent},
                                         timeout=self.args.timeout,
                                         allow_redirects=True)
@@ -183,16 +186,16 @@ class RecursiveQueueManager():
                 # An open directory is found
                 if "Index of " in resp.content:
                     for extension in self.extensions.keys():
-                        if ".{}<".format(extension) in resp.content.lower() and extension in self.suspicious["archives"]:
+                        if ".{}<".format(extension) in resp.content.lower() and extension in suspicious["archives"]:
                             directory = "{}{}/".format(self.args.kit_dir, self.day)
-                        elif ".{}<".format(self.args.ext) in resp.content.lower() and extension in self.suspicious["files"]:
+                        elif ".{}<".format(self.args.ext) in resp.content.lower() and extension in suspicious["files"]:
                             directory = "{}{}/".format(self.args.file_dir, self.day)
                         else:
                             continue
 
                         download_message("('Index of ' found)", url)
 
-                        action = download_site(directory, domain, self.args, self.uagent, self.torsocks, url)
+                        action = download_site(directory, domain, self.args, self.uagent, url)
                         if action == "break":
                             break
                         elif action == "continue":
@@ -208,7 +211,7 @@ class RecursiveQueueManager():
                         else:
                             download_message("(Responded with no Content-Type)", url)
 
-                        action = download_site(directory, domain, self.args, self.uagent, self.torsocks, url)
+                        action = download_site(directory, domain, self.args, self.uagent, url)
                         if action == "break":
                             break
                         elif action == "continue":
@@ -223,7 +226,7 @@ class RecursiveQueueManager():
                     else:
                         download_message("({} found)".format(self.args.ext), url)
                     
-                    action = download_site(directory, domain, self.args, self.uagent, self.torsocks, url)
+                    action = download_site(directory, domain, self.args, self.uagent, url)
                     if action == "break":
                         break
                     elif action == "continue":
@@ -237,15 +240,14 @@ class UrlQueueManager():
     until the application exits.
     """
 
-    def __init__(self, args, url_queue, proxies, uagent, suspicious, day, torsocks):
+    def __init__(self, args, url_queue, uagent):
         """ """
         self.args       = args
         self.url_queue  = url_queue
-        self.proxies    = proxies
         self.uagent     = uagent
-        self.suspicious = suspicious
-        self.day        = day
-        self.torsocks   = torsocks
+        self.day        = date.today()
+
+        print(colored("Creating {} threads...\n".format(self.args.threads), "yellow", attrs=["bold"]))
 
         for thread in range(self.args.threads):
             worker = threading.Thread(target=self.check_site)
@@ -264,7 +266,7 @@ class UrlQueueManager():
             tqdm.tqdm.write("[*] Session   : {}".format(colored(url, "blue")))
             try:
                 resp = requests.get(url,
-                                    proxies=self.proxies,
+                                    proxies=proxies,
                                     headers={"User-Agent": self.uagent},
                                     timeout=self.args.timeout,
                                     allow_redirects=True,
@@ -282,12 +284,12 @@ class UrlQueueManager():
                 self.url_queue.task_done()
                 continue
 
-            extensions = self.suspicious["archives"].keys() + self.suspicious["files"].keys()
+            extensions = suspicious["archives"].keys() + suspicious["files"].keys()
 
             for ext in extensions:
-                if "{}<".format(ext) in resp.content.lower() and ext in self.suspicious["archives"]:
+                if "{}<".format(ext) in resp.content.lower() and ext in suspicious["archives"]:
                     directory = "{}{}/".format(self.args.kit_dir, self.day)
-                elif "{}<".format(ext) in resp.content.lower() and ext in self.suspicious["files"]:
+                elif "{}<".format(ext) in resp.content.lower() and ext in suspicious["files"]:
                     directory = "{}{}/".format(self.args.file_dir, self.day)
                 else:
                     continue
@@ -306,7 +308,6 @@ class UrlQueueManager():
                     wget_command = format_wget(self.args,
                                                directory,
                                                self.uagent,
-                                               self.torsocks,
                                                url)
 
                     subprocess.call(wget_command)
@@ -319,6 +320,18 @@ class UrlQueueManager():
 
             self.url_queue.task_done()
         return
+
+def check_path(args):
+    """ """
+    if not (os.path.exists(args.kit_dir) or os.path.exists(args.file_dir)):
+        print(colored("Either the file or kit directory is temporarily unavailable. Exiting!", "red", attrs=["underline"]))
+        exit()
+    return
+
+def create_queue(queue_name):
+    """ """
+    print(colored("Starting the {}...\n".format(queue_name), "yellow", attrs=["bold"]))
+    return Queue.Queue()
 
 def complete_message(url):
     """ """
@@ -333,7 +346,7 @@ def download_message(comment, url):
         colored(url, "green", attrs=["bold"]), comment))
     return
 
-def download_site(directory, domain, args, uagent, torsocks, url):
+def download_site(directory, domain, args, uagent, url):
     """ """
     try:
         if not os.path.exists(directory):
@@ -342,7 +355,6 @@ def download_site(directory, domain, args, uagent, torsocks, url):
         wget_command = format_wget(args,
                                    directory,
                                    uagent,
-                                   torsocks,
                                    url)
 
         subprocess.call(wget_command)
@@ -386,7 +398,7 @@ def fix_directory(args):
         args.file_dir = "{}/".format(args.file_dir)
     return args
 
-def format_wget(args, directory, uagent, torsocks, url):
+def format_wget(args, directory, uagent, url):
     """Return the wget command needed to download files."""
 
     wget_command = [
@@ -414,8 +426,110 @@ def format_wget(args, directory, uagent, torsocks, url):
     wget_command.append(url)
     return wget_command
 
+def get_domains(args):
+    """ """
+    # Get dates
+    now = datetime.now()
+    day = datetime.strftime(now - timedelta(args.delta), "%Y-%m-%d")
+
+    filename = "{}.zip".format(day)
+    encoded_filename = base64.b64encode(filename)
+    whoisds = "https://whoisds.com//whois-database/newly-registered-domains/{}/nrd"
+
+    try:
+        print(colored("Attempting to get domain list using encoded filename...", "yellow", attrs=["bold"]))
+        resp = requests.get(whoisds.format(encoded_filename))
+    except Exception as err:
+        failed_message(args, err, None)
+
+        try:
+            print(colored("Attempting to get domain list using plain-text filename...", "yellow", attrs=["bold"]))
+            resp = requests.get(whoisds.format(filename))
+        except Exception as err:
+            failed_message(args, err, None)
+            exit()
+
+    try:
+        if resp.status_code == 200 and filename in resp.headers["Content-Disposition"]:
+            print(colored("Download successful...\n", "yellow", attrs=["bold"]))
+
+            content_disposition = resp.headers["Content-Disposition"].replace("attachment; filename=", "")
+            content_disposition = content_disposition.replace('"', "")
+            old_name = "{}{}".format(args.kit_dir, content_disposition)
+            new_name = old_name.replace(".zip", ".txt")
+
+            with open(old_name, "wb") as cd:
+                cd.write(resp.content)
+
+            compressed_file = zipfile.ZipFile(old_name).namelist()[0]
+            zipfile.ZipFile(old_name).extractall(args.kit_dir)
+            os.rename("{}{}".format(args.kit_dir, compressed_file), new_name)
+        else:
+            raise ValueError("Newly registered domains file was not downloaded successfully.")
+    except Exception as err:
+        failed_message(args, err, None)
+        exit()
+
+    with open(new_name, "r") as open_df:
+        domains = open_df.read().splitlines()
+
+    os.remove(old_name)
+    os.remove(new_name)
+    return domains
+
+def query_urlscan(args, queries, uagent, extensions):
+    """Request URLs from urlscan.io"""
+    try:
+        print(colored("Querying urlscan.io for URLs based on provided parameters...\n", "yellow", attrs=["bold"]))
+        api  = "https://urlscan.io/api/v1/search/?q={}%20AND%20filename%3A.{}&size=10000"
+        resp = requests.get(api.format(queries[args.query_type], args.ext),
+                            proxies=proxies,
+                            headers={"User-Agent": uagent},
+                            timeout=args.timeout,
+                            allow_redirects=True)
+    except Exception as err:
+        failed_message(args, err, None)
+        exit()
+
+    try:
+        if not (resp.status_code == 200 and "results" in resp.json().keys()):
+            raise Exception
+    except Exception as err:
+        failed_message(args, err, None)
+        exit()
+
+    results  = resp.json()["results"]
+    # Get stopping point
+    now      = datetime.now()
+    timespan = datetime.strftime(now - timedelta(args.delta), "%a, %d %b %Y 05:00:00")
+    timespan = datetime.strptime(timespan, "%a, %d %b %Y %H:%M:%S")
+    urls     = []
+
+    for result in results:
+        # Break at delta specified
+        analysis_time = datetime.strptime(result["task"]["time"], "%Y-%m-%dT%H:%M:%S.%fZ")
+
+        if analysis_time < timespan:
+            break
+
+        url = result["page"]["url"]
+
+        # Build list of URLs ending with specified extension or Mime-Type
+        if url.endswith('.{}'.format(args.ext)):
+            urls.append(url)
+            continue
+    
+        if "files" in result.keys():
+            for filename in result["files"]:
+                if filename["mimeType"].startswith(extensions[args.ext]):
+                    urls.append(url)
+                    break
+    return urls
+
 def read_externals():
     """ """
+    global suspicious
+
     with open("external.yaml", "r") as f:
         external = yaml.safe_load(f)
             
@@ -445,18 +559,22 @@ def read_externals():
 
 def read_file(input_file):
     """ """
+    print(colored("Reading file containing URLs...\n", "yellow", attrs=["bold"]))
+    
     open_file = open(input_file, "r")
     contents  = open_file.read().splitlines()
     open_file.close()
 
     return contents
 
-def recompile_exclusions(regex_exclusions):
+def recompile_exclusions():
     """ """
+    global exclusions
     exclusions = []
 
-    for exclusion in regex_exclusions:
-        exclusions.append(re.compile(exclusion, re.IGNORECASE))
+    if "exclusions" in suspicious.keys():
+        for exclusion in suspicious["exclusions"]:
+            exclusions.append(re.compile(exclusion, re.IGNORECASE))
     return exclusions
 
 def redirect_message(resp):
@@ -514,8 +632,11 @@ def score_domain(suspicious, domain, args):
 
     return score
 
-def show_network(args, uagent):
+def show_networking(args, uagent):
     """Select network to use, get IP address, and print message"""
+    global proxies
+    global torsocks
+
     if args.tor:
         ip_type  = "Tor"
         proxies  = {
