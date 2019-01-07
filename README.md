@@ -1,19 +1,19 @@
 # [Analyst Arsenal (A²)™]
-##### A tool belt for analysts to continue fighting the good fight.  
+##### Be the first to know on a need-to-know basis.  
 
-#### Description  
+### Description  
 ##### opendir_certstream
-After catching malicious phishing domain names using [certstream](https://certstream.calidog.io/) SSL certificates live stream, make a request to the site to check for predefined file extensions in open directories.  
+After catching malicious phishing domains using the [Certstream](https://certstream.calidog.io/) SSL certificates live stream, make a request to the site to check for predefined file extensions in open directories.  
 
 ##### opendir_certstream
 Search for specific filetypes submitted to [urlscan.io](https://urlscan.io/) and recursively download the webpage if predefined file extensions are found.  
 
-#### Prerequisites  
+### Prerequisites  
 - Ubuntu 18.04+ (should work on other Linux distros)  
 - Python 2.7.14  
 - Torsocks (optional: used with flag `--tor`)  
 
-#### Setup  
+### Setup  
 1. Open a terminal and run the following command:  
 ```bash
 git clone https://github.com/leunammejii/analyst_arsenal.git
