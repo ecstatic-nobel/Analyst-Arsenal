@@ -10,20 +10,22 @@ Description:
 - Delta : Number of days back to search (GMT)
 
 Optional arguments:
-- --file-dir : Directory to use for interesting files detected (default: ./InterestingFiles/)
-- --kit-dir  : Directory to use for phishing kits detected (default: ./KitJackinSeason/)
-- --level    : Recursion depth (default=1, infinite=0)
-- --log-nc   : File to store domains that have not been checked
-- --quiet    : Don't show wget output
-- --threads  : Numbers of threads to spawn
-- --timeout  : Set time to wait for a connection
-- --tor      : Download files via the Tor network
-- --verbose  : Show error messages
+- --file-dir     : Directory to use for interesting files detected (default: ./InterestingFiles/)
+- --kit-dir      : Directory to use for phishing kits detected (default: ./KitJackinSeason/)
+- --level        : Recursion depth (default=1, infinite=0)
+- --log-nc       : File to store domains that have not been checked
+- --quiet        : Don't show wget output
+- --score        : Minimum score to trigger a session (Default: 75)
+- --threads      : Numbers of threads to spawn
+- --timeout      : Set time to wait for a connection
+- --tor          : Download files via the Tor network
+- --verbose      : Show domains being scored
+- --very-verbose : Show error messages
 
 Usage:
 
 ```
-python opendir_whoisds.py <DELTA> [--file-dir] [--kit-dir] [--log-nc] [--quiet] [--timeout] [--tor] [--verbose]
+python opendir_whoisds.py <DELTA> [--file-dir] [--kit-dir] [--level] [--log-nc] [--quiet] [--score] [--threads] [--timeout] [--tor] [--verbose] [--very-verbose]
 ```
 
 Debugger: open("/tmp/opendir.txt", "a").write("{}: <MSG>\n".format(<VAR>))
@@ -71,6 +73,12 @@ parser.add_argument("--quiet",
                     action="store_true",
                     required=False,
                     help="Don't show wget output")
+parser.add_argument("--score",
+                    dest="score",
+                    default=75,
+                    required=False,
+                    type=int,
+                    help="Minimum score to trigger a session (Default: 75)")
 parser.add_argument("--threads",
                     dest="threads",
                     default=3,
@@ -92,9 +100,17 @@ parser.add_argument("--verbose",
                     dest="verbose",
                     action="store_true",
                     required=False,
+                    help="Show domains being scored")
+parser.add_argument("--very-verbose",
+                    dest="very_verbose",
+                    action="store_true",
+                    required=False,
                     help="Show error messages")
 args   = parser.parse_args()
 uagent = "Mozilla/5.0 (Windows NT 6.3; Trident/7.0; rv:11.0) like Gecko"
+
+# Fix directory names
+args = commons.fix_directory(args)
 
 def main():
     """ """
