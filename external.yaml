@@ -26,10 +26,16 @@ files:
     'iso': 'application/octet-stream'
     'jar': 'application/java-archive'
     'lnk': 'application/octet-stream'
+    'm68k': 'donotcheck'
+    'mips': 'donotcheck'
+    'mpsl': 'donotcheck'
+    'ppc': 'donotcheck'
     'ppt': 'application/vnd.ms-powerpoint'
     'ps1': 'donotcheck'
     'py': 'donotcheck'
     'sh': 'donotcheck'
+    'sh4': 'donotcheck'
+    'spc': 'donotcheck'
     'vb': 'donotcheck'
     'vbs': 'donotcheck'
     'xls': 'application/vnd.ms-excel'
@@ -43,6 +49,7 @@ keywords:
     '1password': 60
     'account': 40
     'adobe': 60
+    'advcash': 60
     'barclays': 30
     'bibox': 60
     'bitmex': 60
@@ -51,23 +58,30 @@ keywords:
     'dashlane': 60
     'directtv': 60
     'discovercard': 60
-    'fortnite': 60
-    'keybase': 60
+    'ebay': 60
+    'entromoney': 60
+    'gofund': 40
     'lastpass': 60
     'login': 40
+    'lottery': 30
     'minecraft': 60
     'mydish': 60
     'nordvpn': 60
-    'playstation': 60
+    'okpay': 60
+    'payeer': 60
+    'payza': 60
+    'perfectmoney': 60
     'protonvpn': 60
     'signin': 40
+    'skrill': 60
+    'solidtrustpay': 60
     'spotify': 60
     'support': 40
     'trello': 60
     'tunnelbear': 60
     'verify': 40
     'verizon': 60
-    'warcraft': 60
+    'webmoney': 60
 
 
 tlds:
@@ -91,17 +105,30 @@ exclusions:
 # Add your own regex domain exclusions here, e.g.:
 #    '.+\.edu$':
 #    '.+\.gov$':
-    - '^autodiscover\..+'
-    - '^STH-for-Google .+'
-    - '^www\..+'
-    - '.+\.brilliantpocket.com$'
-    - '.+\.composedb.com$'
-    - '.+\.edu$'
-    - '.+\.google.com$'
-    - '.+\.gov$'
-    - '.+\.microsoft.com$'
-    - '.+\.netflix.com$'
-    - '.+\.playapps.download$'
-    - '.+\.windows.net$'
-    - '.+chat.kowari.macmoney.co.za$'
-    - '.+facebook.sitechs.net$'
+    - '\.amazonaws\.com$'
+    - '\.azure\.com$'
+    - '\.brilliantpocket\.com$'
+    - '\.certsbridge\.com$'
+    - '\.cloudshell\.dev$'
+    - '\.composedb\.com$'
+    - '\.composedb\.direct$'
+    - '\.edu$'
+    - '\.filemaker-cloud\.com$'
+    - '\.google\.com$'
+    - '\.gov$'
+    - '\.honeywell\.com$'
+    - '\.intuit\.com$'
+    - '\.microsoft\.com$'
+    - '\.mil$'
+    - '\.netflix\.com$'
+    - '\.playapps\.download$'
+    - '\.remotewd\.com$'
+    - '\.usgovcloudapi\.net$'
+    - '\.vmwarevmc\.com$'
+    - '\.windows\.net$'
+    - '\.zendesk-staging\.com$'
+    - '^autodiscover\.'
+    - '^STH-for-Google '
+    - '^www\.'
+    - 'chat\.kowari\.macmoney\.co\.za$'
+    - 'facebook\.sitechs\.net$'
