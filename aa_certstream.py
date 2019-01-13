@@ -7,20 +7,22 @@ Description:
 - Recursively download the site when an open directory is found hosting a file with a particular extension
 
 Optional arguments:
-- --file-dir : Directory to use for interesting files detected (default: ./InterestingFiles/)
-- --kit-dir  : Directory to use for phishing kits detected (default: ./KitJackinSeason/)
-- --level    : Recursion depth (default=1, infinite=0)
-- --log-nc   : File to store domains that have not been checked
-- --quiet    : Don't show wget output
-- --threads  : Numbers of threads to spawn
-- --timeout  : Set time to wait for a connection
-- --tor      : Download files via the Tor network
-- --verbose  : Show error messages
+- --file-dir     : Directory to use for interesting files detected (default: ./InterestingFiles/)
+- --kit-dir      : Directory to use for phishing kits detected (default: ./KitJackinSeason/)
+- --level        : Recursion depth (default=1, infinite=0)
+- --log-nc       : File to store domains that have not been checked
+- --quiet        : Don't show wget output
+- --score        : Minimum score to trigger a session (Default: 75)
+- --threads      : Numbers of threads to spawn
+- --timeout      : Set time to wait for a connection
+- --tor          : Download files via the Tor network
+- --verbose      : Show domains being scored
+- --very-verbose : Show error messages
 
 Usage:
 
 ```
-python opendir_certstream.py [--file-dir] [--kit-dir] [--level] [--log-nc] [--quiet] [--threads] [--timeout] [--tor] [--verbose]
+python opendir_certstream.py [--file-dir] [--kit-dir] [--level] [--log-nc] [--quiet] [--score] [--threads] [--timeout] [--tor] [--verbose] [--very-verbose]
 ```
 
 Debugger: open("/tmp/opendir.txt", "a").write("{}: <MSG>\n".format(<VAR>))
@@ -69,6 +71,12 @@ parser.add_argument("--quiet",
                     action="store_true",
                     required=False,
                     help="Don't show wget output")
+parser.add_argument("--score",
+                    dest="score",
+                    default=75,
+                    required=False,
+                    type=int,
+                    help="Minimum score to trigger a session (Default: 75)")
 parser.add_argument("--threads",
                     dest="threads",
                     default=3,
@@ -90,12 +98,19 @@ parser.add_argument("--verbose",
                     dest="verbose",
                     action="store_true",
                     required=False,
+                    help="Show domains being scored")
+parser.add_argument("--very-verbose",
+                    dest="very_verbose",
+                    action="store_true",
+                    required=False,
                     help="Show error messages")
 args   = parser.parse_args()
 uagent = "Mozilla/5.0 (Windows NT 6.3; Trident/7.0; rv:11.0) like Gecko"
 
 # Fix directory names
 args = commons.fix_directory(args)
+
+tqdm.tqdm.monitor_interval = 0
 
 def callback(message, context):
     """Callback handler for certstream events."""
@@ -108,11 +123,11 @@ def callback(message, context):
             domain = all_domains[0]
 
         if domain.startswith("*."):
-            return
+            domain = domain[2:]
 
         match_found = False
         for exclusion in exclusions:
-            if exclusion.match(domain):
+            if exclusion.search(domain):
                 match_found = True
                 break
         
@@ -126,30 +141,37 @@ def callback(message, context):
         if "Let's Encrypt" in message["data"]["chain"][0]["subject"]["aggregated"]:
             score += 10
         
-        if score < 75:
+        if score < args.score:
             if args.log_nc:
                 with open(args.log_nc, "a") as log_nc:
                     log_nc.write("{}\n".format(domain))
             return
 
-        if score >= 120:
-            tqdm.tqdm.write(
-                "[!] Suspicious: {} (score={})".format(
-                    colored(domain, "red", attrs=["underline", "bold"]), score
+        if args.verbose:
+            if score >= 120:
+                tqdm.tqdm.write(
+                    "{}: {} (score={})".format(
+                        commons.message_header("critical"),
+                        colored(domain, "red", attrs=["underline", "bold"]),
+                        score
+                    )
                 )
-            )
-        elif score >= 90:
-            tqdm.tqdm.write(
-                "[!] Suspicious: {} (score={})".format(
-                    colored(domain, "yellow", attrs=["underline"]), score
+            elif score >= 90:
+                tqdm.tqdm.write(
+                    "{}: {} (score={})".format(
+                        commons.message_header("suspicious"),
+                        colored(domain, "yellow", attrs=["underline"]),
+                        score
+                    )
                 )
-            )
-        elif score >= 75:
-            tqdm.tqdm.write(
-                "[!] Likely    : {} (score={})".format(
-                    colored(domain, "cyan", attrs=["underline"]), score
+            elif score >= args.score:
+                tqdm.tqdm.write(
+                    "{}: {} (score={})".format(
+                        commons.message_header("score"),
+                        colored(domain, "cyan", attrs=["underline"]),
+                        score
+                    )
                 )
-            )
 
         url = "https://{}".format(domain)
 
@@ -161,8 +183,6 @@ def callback(message, context):
 
 def on_open(instance):
     """Instance is the CertStreamClient instance that was opened"""
-    global pbar
-
     print(colored("Connection successfully established!\n", "yellow", attrs=["bold"]))
 
     if os.path.exists("queue_file.txt"):
@@ -178,7 +198,9 @@ def on_open(instance):
         except Exception as err:
             commons.failed_message(args, err, None)
 
-    pbar = tqdm.tqdm(desc="certificate_update", unit="cert")
+    if "pbar" not in globals():
+        global pbar
+        pbar = tqdm.tqdm(desc="certificate_update", unit="cert")
     return
 
 def main():
