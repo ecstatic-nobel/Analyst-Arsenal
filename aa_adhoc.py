@@ -1,7 +1,7 @@
 #!/usr/bin/python
 """
 Description:
-- Make requests to the domains retrieved from urlscan.io
+- Make requests to the domains retrieved from a file
 - Recursively download the site when an open directory hosting a file with the desired file extension
 
 3 positional arguments needed:
