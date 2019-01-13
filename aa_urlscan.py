@@ -97,6 +97,9 @@ parser.add_argument("--verbose",
 args   = parser.parse_args()
 uagent = "Mozilla/5.0 (Windows NT 6.3; Trident/7.0; rv:11.0) like Gecko"
 
+# Fix directory names
+args = commons.fix_directory(args)
+
 def main():
     """ """
     # Check if output directories exist
