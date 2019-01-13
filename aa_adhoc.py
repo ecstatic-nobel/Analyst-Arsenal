@@ -19,12 +19,11 @@ Optional arguments:
 - --verbose  : Show error messages
 
 Usage:
-
 ```
-python opendir_urlscan.py <QUERY_TYPE> <DELTA> <FILE_EXTENSION> [--exclude=CSV] [--file-dir] [--kit-dir] [--quiet] [--timeout] [--tor] [--verbose]
+python aa_adhoc.py <INPUT_FILE> <FILE_EXTENSION> [--file-dir] [--kit-dir] [--level] [--quiet] [--threads] [--timeout] [--tor] [--verbose]
 ```
 
-Debugger: open("/tmp/opendir.txt", "a").write("{}: <MSG>\n".format(<VAR>))
+Debugger: open("/tmp/aa.txt", "a").write("{}: <MSG>\n".format(<VAR>))
 """
 
 import argparse

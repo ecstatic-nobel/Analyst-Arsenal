@@ -23,12 +23,11 @@ Optional arguments:
 - --very-verbose : Show error messages
 
 Usage:
-
 ```
-python opendir_whoisds.py <DELTA> [--file-dir] [--kit-dir] [--level] [--log-nc] [--quiet] [--score] [--threads] [--timeout] [--tor] [--verbose] [--very-verbose]
+python aa_whoisds.py <DELTA> [--file-dir] [--kit-dir] [--level] [--log-nc] [--quiet] [--score] [--threads] [--timeout] [--tor] [--verbose] [--very-verbose]
 ```
 
-Debugger: open("/tmp/opendir.txt", "a").write("{}: <MSG>\n".format(<VAR>))
+Debugger: open("/tmp/aa.txt", "a").write("{}: <MSG>\n".format(<VAR>))
 """
 
 import argparse
