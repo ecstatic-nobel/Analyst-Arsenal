@@ -528,8 +528,8 @@ def message_header(message_type):
         "redirect"  : "[>] Redirect  ",
         "session"   : "[?] Session   ",
         "skipping"  : "[-] Skipping  ",
-        "triggered" : "[!] Suspicious",
-        "suspicious": "[!] Triggered "
+        "triggered" : "[!] Triggered ",
+        "suspicious": "[!] Suspicious"
     }
     return headers[message_type]
 

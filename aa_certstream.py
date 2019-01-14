@@ -166,7 +166,7 @@ def callback(message, context):
             elif score >= args.score:
                 tqdm.tqdm.write(
                     "{}: {} (score={})".format(
-                        commons.message_header("score"),
+                        commons.message_header("triggered"),
                         colored(domain, "cyan", attrs=["underline"]),
                         score
                     )
