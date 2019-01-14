@@ -1,5 +1,6 @@
 # Change to true if you want to override suspicious.yaml
-# and only use your own config in this file.
+# and only use your own config in this file. Value must 
+# be a boolean.
 override_suspicious.yaml: false
 
 archives:
@@ -16,7 +17,6 @@ files:
 # Add your own file extensions here e.g.:
 #    '.exe':
 #    '.ps1':
-    'apk': 'application/java-archive'
     'bat': 'donotcheck'
     'dll': 'application/x-dosexec'
     'doc': 'application/msword'
@@ -26,10 +26,16 @@ files:
     'iso': 'application/octet-stream'
     'jar': 'application/java-archive'
     'lnk': 'application/octet-stream'
+    'm68k': 'donotcheck'
+    'mips': 'donotcheck'
+    'mpsl': 'donotcheck'
+    'ppc': 'donotcheck'
     'ppt': 'application/vnd.ms-powerpoint'
     'ps1': 'donotcheck'
     'py': 'donotcheck'
     'sh': 'donotcheck'
+    'sh4': 'donotcheck'
+    'spc': 'donotcheck'
     'vb': 'donotcheck'
     'vbs': 'donotcheck'
     'xls': 'application/vnd.ms-excel'
@@ -40,6 +46,43 @@ keywords:
 # for the ones found in suspicious.yaml, e.g.:
 #    'myownkeyword': 50
 #    'appleid': 0
+    '1password': 60
+    'account': 40
+    'adobe': 60
+    'advcash': 60
+    'barclays': 30
+    'bibox': 60
+    'bitmex': 60
+    'cabletv': 60
+    'coxcable': 60
+    'dashlane': 60
+    'directtv': 60
+    'discovercard': 60
+    'ebay': 60
+    'entromoney': 60
+    'gofund': 40
+    'lastpass': 60
+    'login': 40
+    'lottery': 30
+    'minecraft': 60
+    'mydish': 60
+    'nordvpn': 60
+    'okpay': 60
+    'payeer': 60
+    'payza': 60
+    'perfectmoney': 60
+    'protonvpn': 60
+    'signin': 40
+    'skrill': 60
+    'solidtrustpay': 60
+    'spotify': 60
+    'support': 40
+    'trello': 60
+    'tunnelbear': 60
+    'verify': 40
+    'verizon': 60
+    'webmoney': 60
+
 
 tlds:
 # Add your own TLDs here, e.g.:
@@ -47,6 +90,9 @@ tlds:
 #    '.se':
 
 queries:
+# Add your own urlscan.io queries here, e.g.:
+#    'automatic' : 'task.method%3Aautomatic'
+#    'manual' : 'task.method%3Amanual'
     'automatic' : 'task.method%3Aautomatic'
     'manual' : 'task.method%3Amanual'
     'certstream' : '(task.source%3Acertstream-idn OR task.source%3Acertstream-suspicious)'
@@ -54,3 +100,35 @@ queries:
     'phishtank' : 'task.source%3Aphishtank'
     'twitter' : '(task.source%3Atwitter OR task.source%3Atwitter_illegalFawn OR task.source%3Atwitter_phishingalert)'
     'urlhaus' : 'task.source%3Aurlhaus'
+
+exclusions:
+# Add your own regex domain exclusions here, e.g.:
+#    '.+\.edu$':
+#    '.+\.gov$':
+    - '\.amazonaws\.com$'
+    - '\.azure\.com$'
+    - '\.brilliantpocket\.com$'
+    - '\.certsbridge\.com$'
+    - '\.cloudshell\.dev$'
+    - '\.composedb\.com$'
+    - '\.composedb\.direct$'
+    - '\.edu$'
+    - '\.filemaker-cloud\.com$'
+    - '\.google\.com$'
+    - '\.gov$'
+    - '\.honeywell\.com$'
+    - '\.intuit\.com$'
+    - '\.microsoft\.com$'
+    - '\.mil$'
+    - '\.netflix\.com$'
+    - '\.playapps\.download$'
+    - '\.remotewd\.com$'
+    - '\.usgovcloudapi\.net$'
+    - '\.vmwarevmc\.com$'
+    - '\.windows\.net$'
+    - '\.zendesk-staging\.com$'
+    - '^autodiscover\.'
+    - '^STH-for-Google '
+    - '^www\.'
+    - 'chat\.kowari\.macmoney\.co\.za$'
+    - 'facebook\.sitechs\.net$'
