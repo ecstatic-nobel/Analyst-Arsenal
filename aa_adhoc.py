@@ -9,18 +9,18 @@ Description:
 - File Extension : 7z, apk, bat, bz, bz2, crypt, dll, doc, docx, exe, gz, hta, iso, jar, json, lnk, ppt, ps1, py, rar, sfx, sh, tar, vb, vbs, xld, xls, xlsx, zip
 
 Optional arguments:
-- --file-dir : Directory to use for interesting files detected (default: ./InterestingFiles/)
-- --kit-dir  : Directory to use for phishing kits detected (default: ./KitJackinSeason/)
-- --level    : Recursion depth (default=1, infinite=0)
-- --quiet    : Don't show wget output
-- --threads  : Numbers of threads to spawn
-- --timeout  : Set time to wait for a connection
-- --tor      : Download files via the Tor network
-- --verbose  : Show error messages
+- --file-dir     : Directory to use for interesting files detected (default: ./InterestingFiles/)
+- --kit-dir      : Directory to use for phishing kits detected (default: ./KitJackinSeason/)
+- --level        : Recursion depth (default=1, infinite=0)
+- --quiet        : Don't show wget output
+- --threads      : Numbers of threads to spawn
+- --timeout      : Set time to wait for a connection
+- --tor          : Download files via the Tor network
+- --very-verbose : Show error messages
 
 Usage:
 ```
-python aa_adhoc.py <INPUT_FILE> <FILE_EXTENSION> [--file-dir] [--kit-dir] [--level] [--quiet] [--threads] [--timeout] [--tor] [--verbose]
+python aa_adhoc.py <INPUT_FILE> <FILE_EXTENSION> [--file-dir] [--kit-dir] [--level] [--quiet] [--threads] [--timeout] [--tor] [--very-verbose]
 ```
 
 Debugger: open("/tmp/aa.txt", "a").write("{}: <MSG>\n".format(<VAR>))
@@ -78,8 +78,8 @@ parser.add_argument("--tor",
                     action="store_true",
                     required=False,
                     help="Download files over the Tor network")
-parser.add_argument("--verbose",
-                    dest="verbose",
+parser.add_argument("--very-verbose",
+                    dest="very_verbose",
                     action="store_true",
                     required=False,
                     help="Show error messages")

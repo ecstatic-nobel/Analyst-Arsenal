@@ -741,7 +741,8 @@ def show_summary(args):
     print("    timeout        : {}".format(args.timeout))
     print("    threads        : {}".format(args.threads))
     print("    tor            : {}".format(args.tor))
-    print("    verbose        : {}".format(args.verbose))
+    if "verbose" in args:
+        print("    verbose        : {}".format(args.verbose))
     if "very_verbose" in args:
         print("    verbose+       : {}".format(args.very_verbose))
     return
