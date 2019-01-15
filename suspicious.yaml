@@ -102,6 +102,7 @@ keywords:
     'merilledge': 60
     'bank': 15
 
+
 # Ecommerce
     'amazon': 60
     'overstock': 60
@@ -130,9 +131,25 @@ keywords:
     '.gouv-': 40
     '-gouv-': 40
     '.gouv.': 40
+
     # FR specific
     'suivi': 50
     'laposte': 50
+
+    # BE specific
+    'argenta': 50
+    'fortis': 50
+    'belfius': 50
+    'keytrade' : 50
+    'nagelmackers' : 50
+    'crelan' : 50
+    'beobank' : 50
+    'bepost' : 50
+    'fintro' : 50
+    'europabank' : 50
+    'rabobank' : 50
+    'proximus' : 50
+    'mobileviking' : 50
 
 tlds:
     '.ga':
