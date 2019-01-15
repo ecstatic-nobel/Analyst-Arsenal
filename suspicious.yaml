@@ -110,12 +110,40 @@ keywords:
     'aliexpress': 60
     'leboncoin': 70
 
+# Botnet
+    'tesla' : 50
+    'agenttesla' : 60
+    'emonet' : 60
+    'botnet' : 60
+    'azorult' : 60
+    'arkei' : 60
+    'betabot' : 60
+    'diamondfox' : 60
+    'gorynch' : 60
+    'formbook' : 60
+    'gaudox' : 60
+    'kardon' : 60
+    'kronos' : 60
+    'litehttp' : 60
+    'megalodon' : 60
+    'mirai' : 60
+    'neutrino' : 60
+    'quasar' : 60
+    'pradatorthethief' : 60
+    'rarog' : 60
+    'ursnif' : 60
+    'lokibot' : 60
+    'keybase' : 60
+    'iceIX' : 60
+
 # Other
     'netflix': 70
     'skype': 60
     'github': 60
     'onedrive': 60
     'dropbox': 60
+
+
 
 # Miscellaneous & SE tricks
     'cgi-bin': 50
