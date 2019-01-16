@@ -54,12 +54,12 @@ parser.add_argument("--file-dir",
                     dest="file_dir",
                     default="./InterestingFile/",
                     required=False,
-                    help="Directory to use for interesting files detected (default: ./InterestingFiles))")
+                    help="Directory to use for interesting files detected (default: ./InterestingFiles)")
 parser.add_argument("--kit-dir",
                     dest="kit_dir",
                     default="./KitJackinSeason/",
                     required=False,
-                    help="Directory to use for phishing kits detected (default: ./KitJackinSeason))")
+                    help="Directory to use for phishing kits detected (default: ./KitJackinSeason)")
 parser.add_argument("--level",
                     dest="level",
                     default=0,
@@ -108,8 +108,8 @@ def main():
     commons.show_summary(args)
     commons.show_networking(args, uagent)
 
-    # Read suspicious.yaml and external.yaml
-    suspicious = commons.read_externals()
+    # Read suspicious.yaml
+    suspicious = commons.read_suspicious(args)
 
     # Recompile exclusions
     commons.recompile_exclusions()

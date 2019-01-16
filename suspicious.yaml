@@ -1,107 +1,143 @@
+archives:
+# Detected files with this extension are downloaded to the KitJackinSeason 
+# directory by default. Any changes must use the same format.
+# This section cannot be empty.
+    '7z': 'application/x-7z-compressed'
+    'gz': 'application/x-gzip'
+    'rar': 'application/x-rar'
+    'tar': 'donotcheck'
+    'zip': 'application/zip'
+
+files:
+# Detected files with this extension are downloaded to the InterestingFile 
+# directory by default. Any changes must use the same format.
+# This section cannot be empty.
+    'bat': 'donotcheck'
+    'dll': 'application/x-dosexec'
+    'doc': 'application/msword'
+    'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    'exe': 'application/x-dosexec'
+    'hta': 'donotcheck'
+    'iso': 'application/octet-stream'
+    'jar': 'application/java-archive'
+    'lnk': 'application/octet-stream'
+    'm68k': 'donotcheck'
+    'mips': 'donotcheck'
+    'mpsl': 'donotcheck'
+    'ppc': 'donotcheck'
+    'ppt': 'application/vnd.ms-powerpoint'
+    'ps1': 'donotcheck'
+    'py': 'donotcheck'
+    'sh': 'donotcheck'
+    'sh4': 'donotcheck'
+    'spc': 'donotcheck'
+    'vb': 'donotcheck'
+    'vbs': 'donotcheck'
+    'xls': 'application/vnd.ms-excel'
+    'xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+
+# ------------------------------------------------------------------------------
+
 keywords:
+# Any changes must use the same format.
+# This section cannot be empty.
+
 # Generic suspicious
-    'login': 25
-    'log-in': 25
-    'sign-in': 25
-    'signin': 25
-    'account': 25
-    'verification': 25
-    'verify': 25
-    'webscr': 25
-    'password': 25
-    'credential': 25
-    'support': 25
+    'account': 40
     'activity': 25
-    'security': 25
-    'update': 25
-    'authentication': 25
-    'authenticate': 25
-    'authorize': 25
-    'wallet': 25
     'alert': 25
-    'purchase': 25
-    'transaction': 25
-    'recover': 25
-    'unlock': 25
-    'confirm': 20
-    'live': 15
-    'office': 15
-    'service': 15
-    'manage': 15
-    'portal': 15
-    'invoice': 15
-    'secure': 10
-    'customer': 10
-    'client': 10
+    'authenticate': 25
+    'authentication': 25
+    'authorize': 25
     'bill': 10
-    'online': 10
-    'safe': 10
+    'client': 10
+    'confirm': 30
+    'credential': 25
+    'customer': 10
     'form': 10
+    'invoice': 30
+    'live': 15
+    'loan': 30
+    'log-in': 25
+    'login': 40
+    'lottery': 30
+    'manage': 15
+    'office': 20
+    'online': 10
+    'password': 25
+    'portal': 15
+    'purchase': 25
+    'recover': 25
+    'refund': 30
+    'safe': 10
+    'secure': 20
+    'security': 30
+    'service': 15
+    'sign-in': 30
+    'signin': 40
+    'support': 40
+    'tax': 30
+    'transaction': 25
+    'unlock': 30
+    'update': 25
+    'verification': 30
+    'verify': 40
+    'wallet': 25
+    'webscr': 25
 
 # Apple iCloud
+    'apple': 30
     'appleid': 70
     'icloud': 60
     'iforgot': 60
     'itunes': 50
-    'apple': 30
 
-# Email
-    'office365': 50
-    'microsoft': 60
-    'windows': 30
-    'protonmail': 70
-    'tutanota': 60
-    'hotmail': 60
-    'gmail': 70
-    'outlook': 60
-    'yahoo': 60
-    'google': 60
-    'yandex': 60
-
-# Social Media
-    'twitter': 60
-    'facebook': 60
-    'tumblr': 60
-    'reddit': 60
-    'youtube': 40 # some false positives
-    'linkedin': 60
-    'instagram': 60
-    'flickr': 60
-    'whatsapp': 60
+# Bank/money
+    'advcash': 60
+    'ameritrade': 60
+    'bank': 15
+    'bankofamerica': 60
+    'barclays': 30
+    'barclays': 50
+    'bibox': 60
+    'citigroup': 60
+    'discovercard': 60
+    'gofund': 40
+    'hsbc': 50
+    'merilledge': 60
+    'moneygram': 60
+    'morganstanley': 60
+    'okpay': 60
+    'payeer': 60
+    'paypal': 70
+    'payza': 60
+    'perfectmoney': 60
+    'santander': 60
+    'scottrade': 60
+    'skrill': 60
+    'solidtrustpay': 60
+    'wellsfargo': 60
+    'westernunion': 60
 
 # Cryptocurrency
-    'localbitcoin': 70
-    'poloniex': 60
-    'coinhive': 70
+    'bitconnect': 60
+    'bitfinex': 60
+    'bitflyer': 60
     'bithumb': 60
-    'kraken': 50 # some false positives
+    'bitmex': 60
     'bitstamp': 60
     'bittrex': 60
     'blockchain': 70
-    'bitflyer': 60
     'coinbase': 60
-    'hitbtc': 60
-    'lakebtc': 60
-    'bitfinex': 60
-    'bitconnect': 60
+    'coinhive': 70
     'coinsbank': 60
-
-# Bank/money
-    'paypal': 70
-    'moneygram': 60
-    'westernunion': 60
-    'bankofamerica': 60
-    'wellsfargo': 60
-    'citigroup': 60
-    'santander': 60
-    'morganstanley': 60
-    'barclays': 50
-    'hsbc': 50
-    'scottrade': 60
-    'ameritrade': 60
-    'merilledge': 60
-    'bank': 15
-
+    'entromoney': 60
+    'hitbtc': 60
+    'kraken': 50 # some false positives
+    'lakebtc': 60
+    'localbitcoin': 70
+    'poloniex': 60
+    'webmoney': 60
 
 # Ecommerce
     'amazon': 60
@@ -110,110 +146,200 @@ keywords:
     'aliexpress': 60
     'leboncoin': 70
 
-# Botnet
-    'tesla' : 50
+# Email
+    'gmail': 70
+    'google': 60
+    'hotmail': 60
+    'microsoft': 60
+    'office365': 50
+    'onedrive': 60
+    'outlook': 60
+    'protonmail': 70
+    'tutanota': 60
+    'windows': 30
+    'yahoo': 60
+    'yandex': 60
+
+# Malware
     'agenttesla' : 60
-    'emonet' : 60
-    'botnet' : 60
-    'azorult' : 60
     'arkei' : 60
+    'azorult' : 60
     'betabot' : 60
+    'botnet' : 60
     'diamondfox' : 60
-    'gorynch' : 60
+    'emotet' : 60
     'formbook' : 60
     'gaudox' : 60
+    'gorynch' : 60
+    'iceIX' : 60
     'kardon' : 60
+    'keybase' : 60
     'kronos' : 60
     'litehttp' : 60
+    'lokibot' : 60
     'megalodon' : 60
     'mirai' : 60
     'neutrino' : 60
+    'predatorthethief' : 60
     'quasar' : 60
-    'pradatorthethief' : 60
     'rarog' : 60
+    'tesla' : 50
     'ursnif' : 60
-    'lokibot' : 60
-    'keybase' : 60
-    'iceIX' : 60
+
+# Security
+    '1password': 60
+    'dashlane': 60
+    'lastpass': 60
+    'nordvpn': 60
+    'protonvpn': 60
+    'tunnelbear': 60
+
+# Social Media
+    'facebook': 60
+    'flickr': 60
+    'instagram': 60
+    'linkedin': 60
+    'reddit': 60
+    'tumblr': 60
+    'twitter': 60
+    'whatsapp': 60
+    'youtube': 40 # some false positives
 
 # Other
+    'adobe': 60
+    'cabletv': 60
+    'coxcable': 60
+    'directtv': 60
+    'dropbox': 60
+    'ebay': 60
+    'github': 60
+    'mydish': 60
     'netflix': 70
     'skype': 60
-    'github': 60
-    'onedrive': 60
-    'dropbox': 60
-
-
+    'spotify': 60
+    'trello': 60
+    'verizon': 60
 
 # Miscellaneous & SE tricks
-    'cgi-bin': 50
     '-com.': 20
-    '.net-': 20
-    '.org-': 20
+    '-gouv-': 40
     '.com-': 20
-    '.net.': 20
-    '.org.': 20
     '.com.': 20
+    '.gouv-': 40
+    '.gouv.': 40
     '.gov-': 30
     '.gov.': 30
-    '.gouv-': 40
-    '-gouv-': 40
-    '.gouv.': 40
+    '.net-': 20
+    '.net.': 20
+    '.org-': 20
+    '.org.': 20
+    'cgi-bin': 50
 
     # FR specific
-    'suivi': 50
     'laposte': 50
+    'suivi': 50
 
     # BE specific
     'argenta': 50
-    'fortis': 50
     'belfius': 50
-    'keytrade' : 50
-    'nagelmackers' : 50
-    'crelan' : 50
     'beobank' : 50
     'bepost' : 50
-    'fintro' : 50
+    'crelan' : 50
     'europabank' : 50
-    'rabobank' : 50
-    'proximus' : 50
+    'fintro' : 50
+    'fortis': 50
+    'keytrade' : 50
     'mobileviking' : 50
+    'nagelmackers' : 50
+    'proximus' : 50
+    'rabobank' : 50
+
+# ------------------------------------------------------------------------------
+
+queries:
+# Any changes must use the same format.
+# This section cannot be empty.
+    'automatic' : 'task.method%3Aautomatic'
+    'manual' : 'task.method%3Amanual'
+    'certstream' : '(task.source%3Acertstream-idn OR task.source%3Acertstream-suspicious)'
+    'openphish' : 'task.source%3Aopenphish'
+    'phishtank' : 'task.source%3Aphishtank'
+    'twitter' : '(task.source%3Atwitter OR task.source%3Atwitter_illegalFawn OR task.source%3Atwitter_phishingalert)'
+    'urlhaus' : 'task.source%3Aurlhaus'
+
+# ------------------------------------------------------------------------------
 
 tlds:
-    '.ga':
-    '.gq':
-    '.ml':
-    '.cf':
-    '.tk':
-    '.xyz':
-    '.pw':
-    '.cc':
-    '.club':
-    '.work':
-    '.top':
-    '.support':
+# Any changes must use the same format.
+# This section cannot be empty.
     '.bank':
-    '.info':
-    '.study':
-    '.click':
-    '.country':
-    '.stream':
-    '.gdn':
-    '.mom':
-    '.xin':
-    '.kim':
-    '.men':
-    '.loan':
-    '.download':
-    '.racing':
-    '.online':
-    '.center':
-    '.ren':
-    '.gb':
-    '.win':
-    '.review':
-    '.vip':
-    '.party':
-    '.tech':
-    '.science':
     '.business':
+    '.cc':
+    '.center':
+    '.cf':
+    '.click':
+    '.club':
+    '.country':
+    '.download':
+    '.ga':
+    '.gb':
+    '.gdn':
+    '.gq':
+    '.info':
+    '.kim':
+    '.loan':
+    '.men':
+    '.ml':
+    '.mom':
+    '.online':
+    '.party':
+    '.pw':
+    '.racing':
+    '.ren':
+    '.review':
+    '.science':
+    '.stream':
+    '.study':
+    '.support':
+    '.tech':
+    '.tk':
+    '.top':
+    '.vip':
+    '.win':
+    '.work':
+    '.xin':
+    '.xyz':
+
+# ------------------------------------------------------------------------------
+
+exclusions:
+# Any changes must use the same format.
+    - '\.amazonaws\.com$'
+    - '\.azure\.com$'
+    - '\.brilliantpocket\.com$'
+    - '\.certsbridge\.com$'
+    - '\.cibc\.com$'
+    - '\.cloudflaressl\.com$'
+    - '\.cloudshell\.dev$'
+    - '\.composedb\.com$'
+    - '\.composedb\.direct$'
+    - '\.edu$'
+    - '\.filemaker-cloud\.com$'
+    - '\.google\.com$'
+    - '\.gov$'
+    - '\.honeywell\.com$'
+    - '\.intuit\.com$'
+    - '\.microsoft\.com$'
+    - '\.mil$'
+    - '\.netflix\.com$'
+    - '\.playapps\.download$'
+    - '\.remotewd\.com$'
+    - '\.usgovcloudapi\.net$'
+    - '\.vmwarevmc\.com$'
+    - '\.windows\.net$'
+    - '\.zendesk-staging\.com$'
+    - '^autodiscover\.'
+    - '^STH-for-'
+    - '^www\.'
+    - 'chat\.kowari\.macmoney\.co\.za$'
+    - 'facebook\.sitechs\.net$'

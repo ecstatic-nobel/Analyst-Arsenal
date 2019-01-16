@@ -60,6 +60,7 @@ The following command will:
 - Recursively download the site when an open directory is found hosting a file with a particular extension  
 
 Optional arguments:  
+- **--dns-twist**    : Check the twisted keywords found in dns_twisted.yaml  
 - **--file-dir**     : Directory to use for interesting files detected (default: ./InterestingFiles/)  
 - **--kit-dir**      : Directory to use for phishing kits detected (default: ./KitJackinSeason/)  
 - **--level**        : Recursion depth (default=1, infinite=0)  
@@ -73,7 +74,7 @@ Optional arguments:
 - **--very-verbose** : Show error messages  
 
 ```bash  
-python aa_certstream.py [--file-dir] [--kit-dir] [--level] [--log-nc] [--quiet] [--score] [--threads] [--timeout] [--tor] [--verbose] [--very-verbose]  
+python aa_certstream.py [--dns-twist] [--file-dir] [--kit-dir] [--level] [--log-nc] [--quiet] [--score] [--threads] [--timeout] [--tor] [--verbose] [--very-verbose]  
 ```  
 
 **aa_urlscan**  
@@ -111,6 +112,7 @@ python aa_urlscan.py <QUERY_TYPE> <DELTA> <FILE_EXTENSION> [--file-dir] [--kit-d
 - **Delta** : Number of days back to search (GMT)  
 
 Optional arguments:  
+- **--dns-twist**    : Check the twisted keywords found in dns_twisted.yaml  
 - **--file-dir**     : Directory to use for interesting files detected (default: ./InterestingFiles/)  
 - **--kit-dir**      : Directory to use for phishing kits detected (default: ./KitJackinSeason/)  
 - **--level**        : Recursion depth (default=1, infinite=0)  
@@ -124,12 +126,21 @@ Optional arguments:
 - **--very-verbose** : Show error messages  
 
 ```bash  
-python aa_whoisds.py <DELTA> [--file-dir] [--kit-dir] [--level] [--log-nc] [--quiet] [--score] [--threads] [--timeout] [--tor] [--verbose] [--very-verbose]  
+python aa_whoisds.py <DELTA> [--dns-twist] [--file-dir] [--kit-dir] [--level] [--log-nc] [--quiet] [--score] [--threads] [--timeout] [--tor] [--verbose] [--very-verbose]  
 ```  
 
 ### Things to know  
 - Be responsible!!!  
 - Downloads via Tor happen over **127.0.0.1:9050**  
 - These scripts **will not** check Torsocks settings  
+- Output messages:  
+  - **Session**: checking the site for data included in `external.yaml`  
+  - **Failed**: a connection to the site couldn't be made  
+  - **Critical**: a domain was found with a score above 120  
+  - **Suspicious**: a domain was found with a score above 90  
+  - **Triggered**: a domain was found with the minimum score specified  
+  - **Download**: checks passed and a download was started  
+  - **Complete**: download complete or the site canceled it prematurely  
+- Using the `--dns-twist` flag will default to a minimum of 20 threads  
 
 Please fork, create merge requests, and help make this better.  

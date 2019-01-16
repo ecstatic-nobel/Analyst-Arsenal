@@ -7,6 +7,7 @@ Description:
 - Recursively download the site when an open directory is found hosting a file with a particular extension
 
 Optional arguments:
+- --dns-twist    : Check the twisted keywords found in dns_twisted.yaml
 - --file-dir     : Directory to use for interesting files detected (default: ./InterestingFiles/)
 - --kit-dir      : Directory to use for phishing kits detected (default: ./KitJackinSeason/)
 - --level        : Recursion depth (default=1, infinite=0)
@@ -21,7 +22,7 @@ Optional arguments:
 
 Usage:
 ```
-python aa_certstream.py [--file-dir] [--kit-dir] [--level] [--log-nc] [--quiet] [--score] [--threads] [--timeout] [--tor] [--verbose] [--very-verbose]
+python aa_certstream.py [--dns-twist] [--file-dir] [--kit-dir] [--level] [--log-nc] [--quiet] [--score] [--threads] [--timeout] [--tor] [--verbose] [--very-verbose]
 ```
 
 Debugger: open("/tmp/aa.txt", "a").write("{}: <MSG>\n".format(<VAR>))
@@ -44,6 +45,11 @@ import commons
 parser = argparse.ArgumentParser(
     description="Attempt to detect phishing kits and open directories via Certstream."
 )
+parser.add_argument("--dns-twist",
+                    dest="dns_twist",
+                    action="store_true",
+                    required=False,
+                    help="Check the twisted keywords found in dns_twisted.yaml")
 parser.add_argument("--file-dir",
                     dest="file_dir",
                     default="./InterestingFile/",
@@ -105,6 +111,10 @@ parser.add_argument("--very-verbose",
                     help="Show error messages")
 args   = parser.parse_args()
 uagent = "Mozilla/5.0 (Windows NT 6.3; Trident/7.0; rv:11.0) like Gecko"
+
+# Set threads to a minimum of 20 if using --dns-twist
+if args.dns_twist and args.threads < 20:
+    args.threads = 20
 
 # Fix directory names
 args = commons.fix_directory(args)
@@ -215,8 +225,8 @@ def main():
     commons.show_summary(args)
     commons.show_networking(args, uagent)
 
-    # Read suspicious.yaml and external.yaml
-    suspicious = commons.read_externals()
+    # Read suspicious.yaml
+    suspicious = commons.read_suspicious(args)
 
     # Recompile exclusions
     exclusions = commons.recompile_exclusions()
