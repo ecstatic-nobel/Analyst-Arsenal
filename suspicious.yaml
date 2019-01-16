@@ -339,7 +339,7 @@ exclusions:
     - '\.windows\.net$'
     - '\.zendesk-staging\.com$'
     - '^autodiscover\.'
-    - '^STH-for-Google '
+    - '^STH-for-'
     - '^www\.'
     - 'chat\.kowari\.macmoney\.co\.za$'
     - 'facebook\.sitechs\.net$'
