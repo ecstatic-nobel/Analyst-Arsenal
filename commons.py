@@ -582,35 +582,23 @@ def query_urlscan(args, queries, uagent, extensions):
                     break
     return urls
 
-def read_externals():
+def read_suspicious(args):
     """ """
     global suspicious
-
-    with open("external.yaml", "r") as f:
-        external = yaml.safe_load(f)
             
     with open("suspicious.yaml", "r") as f:
         suspicious = yaml.safe_load(f)
 
     for key in suspicious.keys():
-        if suspicious[key] is None:
+        if key != "extensions" and suspicious[key] is None:
             external_error(key, "suspicious")
             exit()
 
-    if external["override_suspicious.yaml"] is True:
-        suspicious = external
+    if "dns_twist" in args:
+        with open("dns_twisted.yaml", "r") as f:
+            dns_twisted = yaml.safe_load(f)
 
-        for key in external.keys():
-            if external[key] is None:
-                external_error(key, "external")
-                exit()
-        return suspicious
-
-    for key in external.keys():
-        if (key == "keywords" or key == "tlds") and external[key] is not None:
-            suspicious[key].update(external[key])
-        elif external[key] is not None:
-            suspicious[key] = external[key]
+        suspicious["keywords"].update(dns_twisted["keywords"])
     return suspicious
 
 def read_file(input_file):
@@ -727,6 +715,8 @@ def show_summary(args):
         print("    query_type     : {}".format(args.query_type.lower()))
     if "delta" in args:
         print("    delta          : {}".format(args.delta))
+    if "dns_twist" in args:
+        print("    dns_twist      : {}".format(args.dns_twist))
     if "exclude" in args:
         print("    exclusions     : {}".format(args.exclude.split(",")))
     print("    file_dir       : {}".format(args.file_dir))
@@ -735,9 +725,9 @@ def show_summary(args):
     print("    kit_dir        : {}".format(args.kit_dir))
     if "log_nc" in args:
         print("    log_file       : {}".format(args.log_nc))
-    print("    quiet          : {}".format(args.quiet))
     if "score" in args:
         print("    minimum_score  : {}".format(args.score))
+    print("    quiet          : {}".format(args.quiet))
     print("    timeout        : {}".format(args.timeout))
     print("    threads        : {}".format(args.threads))
     print("    tor            : {}".format(args.tor))
