@@ -1,7 +1,7 @@
 #!/usr/bin/bash
 #
 # Description: Attempt to generate a report on ZIP files found.
-# Usage      : bash report.sh PATH_TO_KitJackinSeason
+# Usage      : bash report.sh PATH_TO_Captures
 #
 
 
@@ -128,7 +128,7 @@ do
         fi
 
         echo -e "\nKitUrl" >> pkt.report
-        KitUrl=$(echo "$x" | sed -e "s/.*KitJackinSeason\//hxxps:\/\//gi")
+        KitUrl=$(echo "$x" | sed -e "s/.*Captures\//hxxps:\/\//gi")
         echo "hxxps://$KitUrl" >> pkt.report
 
         echo "$DateFound,$ReferenceLink,$ThreatActorEmail,$EmailType,$KitMailer,$Target,$PhishingDomain,$KitName,$ThreatActor,$KitHash,$KitUrl"
