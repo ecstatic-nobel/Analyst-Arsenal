@@ -8,21 +8,20 @@ Description:
 
 Optional arguments:
 - --dns-twist    : Check the twisted keywords found in dns_twisted.yaml
-- --file-dir     : Directory to use for interesting files detected (default: ./InterestingFiles/)
-- --kit-dir      : Directory to use for phishing kits detected (default: ./KitJackinSeason/)
+- --directory    : Save data to CAP_DIR (default: ./Captures/)
 - --level        : Recursion depth (default=1, infinite=0)
 - --log-nc       : File to store domains that have not been checked
 - --quiet        : Don't show wget output
 - --score        : Minimum score to trigger a session (Default: 75)
 - --threads      : Numbers of threads to spawn
-- --timeout      : Set time to wait for a connection
+- --timeout      : Set the connection timeout to TIMEOUT
 - --tor          : Download files via the Tor network
 - --verbose      : Show domains being scored
 - --very-verbose : Show error messages
 
 Usage:
 ```
-python aa_certstream.py [--dns-twist] [--file-dir] [--kit-dir] [--level] [--log-nc] [--quiet] [--score] [--threads] [--timeout] [--tor] [--verbose] [--very-verbose]
+python aa_certstream.py [--dns-twist] [--directory] [--level] [--log-nc] [--quiet] [--score] [--threads] [--timeout] [--tor] [--verbose] [--very-verbose]
 ```
 
 Debugger: open("/tmp/aa.txt", "a").write("{}: <MSG>\n".format(<VAR>))
@@ -50,16 +49,11 @@ parser.add_argument("--dns-twist",
                     action="store_true",
                     required=False,
                     help="Check the twisted keywords found in dns_twisted.yaml")
-parser.add_argument("--file-dir",
-                    dest="file_dir",
-                    default="./InterestingFile/",
+parser.add_argument("--directory",
+                    dest="cap_dir",
+                    default="./Captures/",
                     required=False,
-                    help="Directory to use for interesting files detected (default: ./InterestingFiles/)")
-parser.add_argument("--kit-dir",
-                    dest="kit_dir",
-                    default="./KitJackinSeason/",
-                    required=False,
-                    help="Directory to use for phishing kits detected (default: ./KitJackinSeason/)")
+                    help="Download data to CAP_DIR (default: ./Captures)")
 parser.add_argument("--level",
                     dest="level",
                     default=1,
@@ -93,7 +87,7 @@ parser.add_argument("--timeout",
                     default=30,
                     required=False,
                     type=int,
-                    help="Set time to wait for a connection")
+                    help="Set the connection timeout to TIMEOUT")
 parser.add_argument("--tor",
                     dest="tor",
                     action="store_true",
@@ -109,15 +103,12 @@ parser.add_argument("--very-verbose",
                     action="store_true",
                     required=False,
                     help="Show error messages")
-args   = parser.parse_args()
-uagent = "Mozilla/5.0 (Windows NT 6.3; Trident/7.0; rv:11.0) like Gecko"
+# Fix directory names
+args = commons.fix_directory(parser.parse_args())
 
 # Set threads to a minimum of 20 if using --dns-twist
 if args.dns_twist and args.threads < 20:
     args.threads = 20
-
-# Fix directory names
-args = commons.fix_directory(args)
 
 tqdm.tqdm.monitor_interval = 0
 
@@ -145,7 +136,7 @@ def callback(message, context):
 
         pbar.update(1)
 
-        score = commons.score_domain(suspicious, domain.lower(), args)
+        score = commons.score_domain(config, domain.lower(), args)
 
         if "Let's Encrypt" in message["data"]["chain"][0]["subject"]["aggregated"]:
             score += 10
@@ -215,7 +206,7 @@ def on_open(instance):
 def main():
     """ """
     global exclusions
-    global suspicious
+    global config
     global url_queue
 
     # Check if output directories exist
@@ -223,19 +214,19 @@ def main():
 
     # Print start messages
     commons.show_summary(args)
-    commons.show_networking(args, uagent)
+    commons.show_networking(args) # globals: proxies, torsocks
 
-    # Read suspicious.yaml
-    suspicious = commons.read_suspicious(args)
+    # Read config.yaml
+    config = commons.read_config(args) # globals: config
 
     # Recompile exclusions
-    exclusions = commons.recompile_exclusions()
+    exclusions = commons.recompile_exclusions() # globals: exclusions
 
     # Create queues
     url_queue = commons.create_queue("url_queue")
 
     # Create threads
-    commons.UrlQueueManager(args, url_queue, uagent)
+    commons.UrlQueueManager(args, url_queue)
 
     # Listen for events via Certstream
     print(colored("Connecting to Certstream...\n", "yellow", attrs=["bold"]))

@@ -2,7 +2,7 @@
 ##### Be the first to know on a need-to-know basis.  
 
 ### Description  
-With `aa_adhoc`, run through a list of URLs and recursively check sites for malicious files based on predefined file extensions.  
+With `aa_adhoc`, run through a list of URLs and check sites for malicious files based on predefined file extensions.  
 
 With `aa_certstream`, find out when a phishing kit has been staged on a domain. With this information, you can be amongst the first to:  
 - Know  
@@ -10,9 +10,9 @@ With `aa_certstream`, find out when a phishing kit has been staged on a domain. 
 - Report  
 - Analyze  
 
-With `aa_urlscan`, easily search [urlscan.io](https://urlscan.io/) and recursively check sites for malicious files based on predefined file extensions.  
+With `aa_urlscan`, easily search [urlscan.io](https://urlscan.io/) and check sites for malicious files based on predefined file extensions.  
 
-With `aa_whoisds`, download a list of newly registered domains from [WHOIS Domain Search](https://whoisds.com/newly-registered-domains), score the domains, and search for signs of phishing activity.  
+With `aa_whoisds`, download a list of newly registered domains from [WHOIS Domain Search](https://whoisds.com/newly-registered-domains), score the domains, and search for signs of malicious activity.  
 
 ### Prerequisites  
 - Ubuntu 18.04+ (should work on other Linux distros)  
@@ -32,24 +32,22 @@ With `aa_whoisds`, download a list of newly registered domains from [WHOIS Domai
 **aa_adhoc**  
 The following command will:  
 - Make requests to the domains retrieved from a file  
-- Recursively download the site when an open directory hosting a file with the desired file extension  
+- Download files from the site when an open directory is found hosting a file with the desired file extension  
 
-3 positional arguments needed:  
+1 positional arguments needed:  
 - **Input File**     : Path to the file containing URLs  
-- **File Extension** : 7z, apk, bat, bz, bz2, crypt, dll, doc, docx, exe, gz, hta, iso, jar, json, lnk, ppt, ps1, py, rar, sfx, sh, tar, vb, vbs, xld, xls, xlsx, zip  
 
 Optional arguments:  
-- **--file-dir**      : Directory to use for interesting files detected (default: ./InterestingFiles/)  
-- **--kit-dir**       : Directory to use for phishing kits detected (default: ./KitJackinSeason/)  
-- **--level**         : Recursion depth (default=1, infinite=0)  
-- **--quiet**         : Don't show wget output  
-- **--threads**       : Numbers of threads to spawn  
-- **--timeout**       : Set time to wait for a connection  
-- **--tor**           : Download files via the Tor network  
-- **--very-verbose**  : Show error messages  
+- **--directory**    : Download data to CAP_DIR (default: ./Captures)  
+- **--level**        : Recursion depth (default=1, infinite=0)  
+- **--quiet**        : Don't show wget output  
+- **--threads**      : Numbers of threads to spawn  
+- **--timeout**      : Set the connection timeout to TIMEOUT  
+- **--tor**          : Download files via the Tor network  
+- **--very-verbose** : Show error messages  
 
 ```bash  
-python aa_adhoc.py <INPUT_FILE> <FILE_EXTENSION> [--file-dir] [--kit-dir] [--level] [--quiet] [--threads] [--timeout] [--tor] [--very-verbose]  
+python aa_adhoc.py <INPUT_FILE> [--directory] [--level] [--quiet] [--threads] [--timeout] [--tor] [--very-verbose]  
 ```  
 
 **aa_certstream**  
@@ -61,20 +59,19 @@ The following command will:
 
 Optional arguments:  
 - **--dns-twist**    : Check the twisted keywords found in dns_twisted.yaml  
-- **--file-dir**     : Directory to use for interesting files detected (default: ./InterestingFiles/)  
-- **--kit-dir**      : Directory to use for phishing kits detected (default: ./KitJackinSeason/)  
+- **--directory**    : Download data to CAP_DIR (default: ./Captures)  
 - **--level**        : Recursion depth (default=1, infinite=0)  
 - **--log-nc**       : File to store domains that have not been checked  
 - **--quiet**        : Don't show wget output  
 - **--score**        : Minimum score to trigger a session (Default: 75)  
 - **--threads**      : Numbers of threads to spawn  
-- **--timeout**      : Set time to wait for a connection  
+- **--timeout**      : Set the connection timeout to TIMEOUT  
 - **--tor**          : Download files via the Tor network  
 - **--verbose**      : Show domains being scored  
 - **--very-verbose** : Show error messages  
 
 ```bash  
-python aa_certstream.py [--dns-twist] [--file-dir] [--kit-dir] [--level] [--log-nc] [--quiet] [--score] [--threads] [--timeout] [--tor] [--verbose] [--very-verbose]  
+python aa_certstream.py [--dns-twist] [--directory] [--level] [--log-nc] [--quiet] [--score] [--threads] [--timeout] [--tor] [--verbose] [--very-verbose]  
 ```  
 
 **aa_urlscan**  
@@ -88,17 +85,16 @@ The following command will:
 - **File Extension** : 7z, apk, bat, bz, bz2, crypt, dll, doc, docx, exe, gz, hta, iso, jar, json, lnk, ppt, ps1, py, rar, sfx, sh, tar, vb, vbs, xld, xls, xlsx, zip  
 
 Optional arguments:  
-- **--file-dir**      : Directory to use for interesting files detected (default: ./InterestingFiles/)  
-- **--kit-dir**       : Directory to use for phishing kits detected (default: ./KitJackinSeason/)  
-- **--level**         : Recursion depth (default=1, infinite=0)  
-- **--quiet**         : Don't show wget output  
-- **--threads**       : Numbers of threads to spawn  
-- **--timeout**       : Set time to wait for a connection  
-- **--tor**           : Download files via the Tor network  
-- **--very-verbose**  : Show error messages  
+- **--directory**    : Download data to CAP_DIR (default: ./Captures)  
+- **--level**        : Recursion depth (default=1, infinite=0)  
+- **--quiet**        : Don't show wget output  
+- **--threads**      : Numbers of threads to spawn  
+- **--timeout**      : Set the connection timeout to TIMEOUT  
+- **--tor**          : Download files via the Tor network  
+- **--very-verbose** : Show error messages  
 
 ```bash  
-python aa_urlscan.py <QUERY_TYPE> <DELTA> <FILE_EXTENSION> [--file-dir] [--kit-dir] [--level] [--quiet] [--threads] [--timeout] [--tor] [--very-verbose]  
+python aa_urlscan.py <QUERY_TYPE> <DELTA> <FILE_EXTENSION> [[--directory] [--level] [--quiet] [--threads] [--timeout] [--tor] [--very-verbose]  
 ```  
 **Note**: If the path is a file, it will be automatically downloaded.  
 
@@ -113,20 +109,19 @@ python aa_urlscan.py <QUERY_TYPE> <DELTA> <FILE_EXTENSION> [--file-dir] [--kit-d
 
 Optional arguments:  
 - **--dns-twist**    : Check the twisted keywords found in dns_twisted.yaml  
-- **--file-dir**     : Directory to use for interesting files detected (default: ./InterestingFiles/)  
-- **--kit-dir**      : Directory to use for phishing kits detected (default: ./KitJackinSeason/)  
+- **--directory**    : Download data to CAP_DIR (default: ./Captures)  
 - **--level**        : Recursion depth (default=1, infinite=0)  
 - **--log-nc**       : File to store domains that have not been checked  
 - **--quiet**        : Don't show wget output  
 - **--score**        : Minimum score to trigger a session (Default: 75)  
 - **--threads**      : Numbers of threads to spawn  
-- **--timeout**      : Set time to wait for a connection  
+- **--timeout**      : Set the connection timeout to TIMEOUT  
 - **--tor**          : Download files via the Tor network  
 - **--verbose**      : Show domains being scored  
 - **--very-verbose** : Show error messages  
 
 ```bash  
-python aa_whoisds.py <DELTA> [--dns-twist] [--file-dir] [--kit-dir] [--level] [--log-nc] [--quiet] [--score] [--threads] [--timeout] [--tor] [--verbose] [--very-verbose]  
+python aa_whoisds.py <DELTA> [--dns-twist] [--directory] [--level] [--log-nc] [--quiet] [--score] [--threads] [--timeout] [--tor] [--verbose] [--very-verbose]  
 ```  
 
 ### Things to know  
@@ -141,6 +136,11 @@ python aa_whoisds.py <DELTA> [--dns-twist] [--file-dir] [--kit-dir] [--level] [-
   - **Triggered**: a domain was found with the minimum score specified  
   - **Download**: checks passed and a download was started  
   - **Complete**: download complete or the site canceled it prematurely  
+  - **Directory**: the output directory is unavailable  
+- If the keywords in `config.yaml` have been modified and `--dns-twist` is going to be used, regenerate `dns_twisted.yaml` by running the following command:  
+    ```bash
+    bash dnstwist.sh PATH_TO_DNSTWIST_SCRIPT
+    ```
 - Using the `--dns-twist` flag will default to a minimum of 20 threads  
 
 Please fork, create merge requests, and help make this better.  

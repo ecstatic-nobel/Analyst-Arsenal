@@ -46,6 +46,7 @@ from confusables import unconfuse
 
 
 tqdm.tqdm.monitor_interval = 0
+uagent = "Mozilla/5.0 (Windows NT 6.3; Trident/7.0; rv:11.0) like Gecko"
 
 class DomainQueueManager():
     """
@@ -79,7 +80,7 @@ class DomainQueueManager():
                 self.domain_queue.task_done()
                 continue
 
-            score = score_domain(suspicious, domain.lower(), self.args)
+            score = score_domain(config, domain.lower(), self.args)
             
             if score < self.args.score:
                 if self.args.log_nc:
@@ -118,154 +119,22 @@ class DomainQueueManager():
             self.domain_queue.task_done()
         return
 
-class RecursiveQueueManager():
-    """
-    The run() method will be started and it will run in the background
-    until the application exits.
-    """
-
-    def __init__(self, args, recursion_queue, uagent, extensions):
-        """ """
-        self.args             = args
-        self.recursion_queue  = recursion_queue
-        self.uagent           = uagent
-        self.extensions       = extensions
-
-        print(colored("Creating {} threads...\n".format(self.args.threads), "yellow", attrs=["bold"]))
-
-        thread_master(self.args.threads, self.check_site)
-
-    def check_site(self):
-        """ """
-        while True:
-            day = date.today()
-            url = self.recursion_queue.get()
-
-            # Check if the current URL has already been redirected to
-            if "redirect" in vars() and redirect == url:
-                del redirect
-                continue
-
-            # Split URL into parts
-            split_url = url.split("/")
-            protocol  = split_url[0]
-            domain    = split_url[2].split(":")[0]
-
-            match_found = False
-            for exclusion in exclusions:
-                if exclusion.search(domain):
-                    match_found = True
-                    break
-            
-            if match_found:
-                tqdm.tqdm.write("{}: {}".format(
-                    message_header("excluded"), 
-                    colored(url, "red")
-                ))
-                self.recursion_queue.task_done()
-                continue
-
-            tqdm.tqdm.write("{}: {}".format(
-                message_header("original"), 
-                colored(url, "cyan")
-            ))
-            url = "//".join([protocol, domain])
-
-            # Build list of URL resources
-            resources = split_url[3:]
-            resources = ['/{}'.format(x) for x in resources]
-            resources.insert(0, "")
-
-            for resource in resources:
-                # Combine current URL and resource
-                url = "{}{}".format(url, resource)
-
-                # Send first request to the URL
-                tqdm.tqdm.write("{}: {}".format(message_header("session"), colored(url, "blue")))
-
-                try:
-                    resp = requests.get(url,
-                                        proxies=proxies,
-                                        headers={"User-Agent": self.uagent},
-                                        timeout=self.args.timeout,
-                                        allow_redirects=True)
-                except Exception as err:
-                    failed_message(self.args, err, url)
-                    continue
-
-                if resp.status_code != 200 or "wordpress/<" in resp.content:
-                    continue
-
-                if glob.glob("./*/{}/{}".format(day, domain)):
-                    tqdm.tqdm.write("{}: {} (Directory '{}' already exists)".format(
-                        message_header("skipping"),
-                        colored(url, "red"),
-                        domain
-                    ))
-                    break
-
-                # An open directory is found
-                if "Index of " in resp.content:
-                    for extension in self.extensions.keys():
-                        if ".{}<".format(extension) in resp.content.lower() and extension in suspicious["archives"]:
-                            directory = "{}{}/".format(self.args.kit_dir, day)
-                        elif ".{}<".format(self.args.ext) in resp.content.lower() and extension in suspicious["files"]:
-                            directory = "{}{}/".format(self.args.file_dir, day)
-                        else:
-                            continue
-
-                        download_message("('Index of ' found)", url)
-
-                        action = download_site(directory, domain, self.args, self.uagent, url)
-                        if action == "break":
-                            break
-                        elif action == "continue":
-                            continue
-
-                # A URL is found ending in the specified extension but the server responded with no Content-Type
-                if "Content-Type" not in resp.headers.keys():
-                    directory = "{}{}/".format(self.args.file_dir, day)
-
-                    if url.endswith('.{}'.format(self.args.ext)):
-                        if resp.url != url:
-                            redirect = redirect_message(resp)
-                        else:
-                            download_message("(Responded with no Content-Type)", url)
-
-                        action = download_site(directory, domain, self.args, self.uagent, url)
-                        if action == "break":
-                            break
-                        elif action == "continue":
-                            continue
-
-                # A file is found with the Mime-Type of the specified extension
-                if resp.headers["Content-Type"].startswith(self.extensions[self.args.ext]) or url.endswith(".{}".format(self.args.ext)):
-                    directory = "{}{}/".format(self.args.file_dir, day)
-
-                    if resp.url != url:
-                        redirect = redirect_message(resp)
-                    else:
-                        download_message("({} found)".format(self.args.ext), url)
-                    
-                    action = download_site(directory, domain, self.args, self.uagent, url)
-                    if action == "break":
-                        break
-                    elif action == "continue":
-                        continue
-            self.recursion_queue.task_done()
-        return
-
 class UrlQueueManager():
     """
     The run() method will be started and it will run in the background
     until the application exits.
     """
 
-    def __init__(self, args, url_queue, uagent):
+    def __init__(self, args, url_queue):
         """ """
+        # globals config
+        # globals exclusions
+        # globals proxies
+        # globals torsocks
         self.args       = args
         self.url_queue  = url_queue
-        self.uagent     = uagent
+        self.extensions = config["extensions"].keys()
+        self.ext_csv    = ",".join(self.extensions)
 
         print(colored("Creating {} threads...\n".format(self.args.threads), "yellow", attrs=["bold"]))
 
@@ -278,7 +147,7 @@ class UrlQueueManager():
             day = date.today()
 
             if "delta" in self.args:
-                day = day = datetime.strftime(day - timedelta(self.args.delta), "%Y-%m-%d")
+                day = datetime.strftime(day - timedelta(self.args.delta), "%Y-%m-%d")
 
             with open("queue_file.txt", "w") as qfile:
                 for q in list(self.url_queue.queue):
@@ -296,48 +165,44 @@ class UrlQueueManager():
             try:
                 resp = requests.get(url,
                                     proxies=proxies,
-                                    headers={"User-Agent": self.uagent},
+                                    headers={"User-Agent": uagent},
                                     timeout=self.args.timeout,
-                                    allow_redirects=True,
+                                    allow_redirects=False,
                                     verify=False)
             except Exception as err:
                 failed_message(self.args, err, url)
                 self.url_queue.task_done()
                 continue
 
-            if "wordpress/<" in resp.content:
+            if "wordpress/<" in resp.content or resp.status_code != 200:
                 self.url_queue.task_done()
                 continue
 
-            if not (resp.status_code == 200 and "Index of " in resp.content):
-                self.url_queue.task_done()
-                continue
+            if "Index of /" in resp.content:
+                for ext in self.extensions:
+                    if ".{}<".format(ext) not in resp.content.lower():
+                        continue
 
-            extensions = suspicious["archives"].keys() + suspicious["files"].keys()
+                    download_message("('Index of /' found)", url)
 
-            for ext in extensions:
-                if "{}<".format(ext) in resp.content.lower() and ext in suspicious["archives"]:
-                    directory = "{}{}/".format(self.args.kit_dir, day)
-                elif "{}<".format(ext) in resp.content.lower() and ext in suspicious["files"]:
-                    directory = "{}{}/".format(self.args.file_dir, day)
-                else:
-                    continue
+                    action = download_site(self.args, day, domain, self.ext_csv, url)
+                    if action == "break":
+                        break
+                    elif action == "continue":
+                        continue
+            elif "Content-Disposition" in resp.headers:
+                attachment = resp.headers["Content-Disposition"].split("=")[1].replace('"', '')
 
-                download_message("('Index of ' found)", url)
-
-                action = download_site(directory, domain, self.args, self.uagent, url)
-                if action == "break":
-                    break
-                elif action == "continue":
-                    continue
-
+                if "ext" in self.args and attachment.endswith(".{}".format(self.args.ext)):
+                    download_message("(Attachment found)", url)
+                    download_site(self.args, day, domain, self.ext_csv, url)
             self.url_queue.task_done()
         return
 
 def check_path(args):
     """ """
-    if not (os.path.exists(args.kit_dir) or os.path.exists(args.file_dir)):
-        print(colored("Either the file or kit directory is temporarily unavailable. Exiting!", "red", attrs=["underline"]))
+    if not (os.path.exists(args.cap_dir)):
+        print(colored("The output directory is temporarily unavailable. Exiting!", "red", attrs=["underline"]))
         exit()
     return
 
@@ -361,26 +226,29 @@ def download_message(comment, url):
         colored(url, "green", attrs=["bold"]), comment))
     return
 
-def download_site(directory, domain, args, uagent, url):
+def download_site(args, day, domain, ext_csv, url):
     """ """
-    try:
-        if not os.path.exists(directory):
-            os.makedirs("{}{}".format(directory, domain))
+    directory = "{}{}".format(args.cap_dir, day)
 
-        if not os.path.exists(directory):
+    try:
+        if not os.path.exists("{}/{}".format(directory, domain)):
+            os.makedirs("{}/{}".format(directory, domain))
+
+        if not os.path.exists("{}/{}".format(directory, domain)):
             tqdm.tqdm.write(colored("{}: {} is temporarily unavailable.".format(
                 message_header("directory"), 
-                directory
+                "{}/{}".format(directory, domain)
             ), "red", attrs=["underline"]))
             tqdm.tqdm.write(colored("{}: Waiting 60s for {} to become available...".format(
                 message_header("directory"), 
-                directory), "red", attrs=["underline"]
+                "{}/{}".format(directory, domain)), "red", attrs=["underline"]
             ))
             time.sleep(60)
 
         wget_command = format_wget(args,
                                    directory,
                                    uagent,
+                                   ext_csv,
                                    url)
 
         subprocess.call(wget_command)
@@ -419,14 +287,11 @@ def failed_message(args, err, message):
 
 def fix_directory(args):
     """ """
-    if not args.kit_dir.endswith("/"):
-        args.kit_dir = "{}/".format(args.kit_dir)
-
-    if not args.file_dir.endswith("/"):
-        args.file_dir = "{}/".format(args.file_dir)
+    if not args.cap_dir.endswith("/"):
+        args.cap_dir = "{}/".format(args.cap_dir)
     return args
 
-def format_wget(args, directory, uagent, url):
+def format_wget(args, directory, uagent, ext_csv, url):
     """Return the wget command needed to download files."""
 
     wget_command = [
@@ -440,6 +305,7 @@ def format_wget(args, directory, uagent, url):
         "--header='User-Agent: {}'".format(uagent),
         "--content-disposition",
         "--no-check-certificate",
+        "--accept={}".format(ext_csv),
         "--recursive",
         "--level={}".format(args.level),
         "--no-parent"
@@ -454,7 +320,7 @@ def format_wget(args, directory, uagent, url):
     wget_command.append(url)
     return wget_command
 
-def get_domains(uagent, args):
+def get_domains(args):
     """ """
     # Get dates
     now = datetime.now()
@@ -491,15 +357,15 @@ def get_domains(uagent, args):
 
             content_disposition = resp.headers["Content-Disposition"].replace("attachment; filename=", "")
             content_disposition = content_disposition.replace('"', "")
-            zip_name = "{}{}".format(args.kit_dir, content_disposition)
+            zip_name = "{}{}".format(args.cap_dir, content_disposition)
             txt_name = zip_name.replace(".zip", ".txt")
 
             with open(zip_name, "wb") as cd:
                 cd.write(resp.content)
 
             compressed_file = zipfile.ZipFile(zip_name).namelist()[0]
-            zipfile.ZipFile(zip_name).extractall(args.kit_dir)
-            os.rename("{}{}".format(args.kit_dir, compressed_file), txt_name)
+            zipfile.ZipFile(zip_name).extractall(args.cap_dir)
+            os.rename("{}{}".format(args.cap_dir, compressed_file), txt_name)
         else:
             raise ValueError("Newly registered domains file was not downloaded successfully.")
     except Exception as err:
@@ -533,12 +399,12 @@ def message_header(message_type):
     }
     return headers[message_type]
 
-def query_urlscan(args, queries, uagent, extensions):
+def query_urlscan(args):
     """Request URLs from urlscan.io"""
     try:
-        print(colored("Querying urlscan.io for URLs based on provided parameters...\n", "yellow", attrs=["bold"]))
+        print(colored("Querying urlscan.io for URLs...\n", "yellow", attrs=["bold"]))
         api  = "https://urlscan.io/api/v1/search/?q={}%20AND%20filename%3A.{}&size=10000"
-        resp = requests.get(api.format(queries[args.query_type], args.ext),
+        resp = requests.get(api.format(config["queries"][args.query_type], args.ext),
                             proxies=proxies,
                             headers={"User-Agent": uagent},
                             timeout=args.timeout,
@@ -577,29 +443,29 @@ def query_urlscan(args, queries, uagent, extensions):
     
         if "files" in result.keys():
             for filename in result["files"]:
-                if filename["mimeType"].startswith(extensions[args.ext]):
+                if filename["mimeType"].startswith(config["extensions"][args.ext]):
                     urls.append(url)
                     break
     return urls
 
-def read_suspicious(args):
+def read_config(args):
     """ """
-    global suspicious
+    global config
             
-    with open("suspicious.yaml", "r") as f:
-        suspicious = yaml.safe_load(f)
+    with open("config.yaml", "r") as f:
+        config = yaml.safe_load(f)
 
-    for key in suspicious.keys():
-        if key != "extensions" and suspicious[key] is None:
-            external_error(key, "suspicious")
+    for key in config.keys():
+        if key != "extensions" and config[key] is None:
+            external_error(key, "config")
             exit()
 
     if "dns_twist" in args:
         with open("dns_twisted.yaml", "r") as f:
             dns_twisted = yaml.safe_load(f)
 
-        suspicious["keywords"].update(dns_twisted["keywords"])
-    return suspicious
+        config["keywords"].update(dns_twisted["keywords"])
+    return config
 
 def read_file(input_file):
     """ """
@@ -616,8 +482,8 @@ def recompile_exclusions():
     global exclusions
     exclusions = []
 
-    if "exclusions" in suspicious.keys():
-        for exclusion in suspicious["exclusions"]:
+    if "exclusions" in config.keys():
+        for exclusion in config["exclusions"]:
             exclusions.append(re.compile(exclusion, re.IGNORECASE))
     return exclusions
 
@@ -630,10 +496,10 @@ def redirect_message(resp):
     ))
     return redirect
 
-def score_domain(suspicious, domain, args):
+def score_domain(config, domain, args):
     """ """
     score = 0
-    for t in suspicious["tlds"]:
+    for t in config["tlds"]:
         if domain.endswith(t):
             score += 20
 
@@ -654,11 +520,11 @@ def score_domain(suspicious, domain, args):
     if words_in_domain[0] in ["com", "net", "org"]:
         score += 10
 
-    for word in suspicious["keywords"]:
+    for word in config["keywords"]:
         if word in domain:
-            score += suspicious["keywords"][word]
+            score += config["keywords"][word]
 
-    for key in [k for (k,s) in suspicious["keywords"].items() if s >= 70]:
+    for key in [k for (k,s) in config["keywords"].items() if s >= 70]:
         for word in [w for w in words_in_domain if w not in ["email", "mail", "cloud"]]:
             if distance(str(word), str(key)) == 1:
                 score += 70
@@ -671,7 +537,7 @@ def score_domain(suspicious, domain, args):
 
     return score
 
-def show_networking(args, uagent):
+def show_networking(args):
     """Select network to use, get IP address, and print message"""
     global proxies
     global torsocks
@@ -705,7 +571,7 @@ def show_networking(args, uagent):
         print(colored("{} IP: {}\n".format(ip_type, obfuscated_ip), "yellow", attrs=["bold"]))
     else:
         print(colored("{} IP: {}\n".format(ip_type, requested_ip), "yellow", attrs=["bold"]))
-    return proxies, torsocks
+    return
 
 def show_summary(args):
     """Print summary of arguments selected"""
@@ -715,21 +581,22 @@ def show_summary(args):
         print("    query_type     : {}".format(args.query_type.lower()))
     if "delta" in args:
         print("    delta          : {}".format(args.delta))
+    if "ext" in args:
+        print("    extension      : {}".format(args.ext))
+    print("    directory      : {}".format(args.cap_dir))
     if "dns_twist" in args:
         print("    dns_twist      : {}".format(args.dns_twist))
     if "exclude" in args:
         print("    exclusions     : {}".format(args.exclude.split(",")))
-    print("    file_dir       : {}".format(args.file_dir))
-    if "file_extension" in args:
-        print("    file_extension : {}".format(args.file_extension.lower()))
-    print("    kit_dir        : {}".format(args.kit_dir))
+    print("    level          : {}".format(args.level))
     if "log_nc" in args:
         print("    log_file       : {}".format(args.log_nc))
+    print("    quiet          : {}".format(args.quiet))
     if "score" in args:
         print("    minimum_score  : {}".format(args.score))
     print("    quiet          : {}".format(args.quiet))
-    print("    timeout        : {}".format(args.timeout))
     print("    threads        : {}".format(args.threads))
+    print("    timeout        : {}".format(args.timeout))
     print("    tor            : {}".format(args.tor))
     if "verbose" in args:
         print("    verbose        : {}".format(args.verbose))

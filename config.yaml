@@ -1,22 +1,16 @@
-archives:
-# Detected files with this extension are downloaded to the KitJackinSeason 
+extensions:
+# Detected files with this extension are downloaded to the Captures 
 # directory by default. Any changes must use the same format.
 # This section cannot be empty.
     '7z': 'application/x-7z-compressed'
-    'gz': 'application/x-gzip'
-    'rar': 'application/x-rar'
-    'tar': 'donotcheck'
-    'zip': 'application/zip'
-
-files:
-# Detected files with this extension are downloaded to the InterestingFile 
-# directory by default. Any changes must use the same format.
-# This section cannot be empty.
     'bat': 'donotcheck'
+    # 'bz2': 'donotcheck'
+    'crypt': 'donotcheck'
     'dll': 'application/x-dosexec'
     'doc': 'application/msword'
     'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
     'exe': 'application/x-dosexec'
+    # 'gz': 'application/x-gzip'
     'hta': 'donotcheck'
     'iso': 'application/octet-stream'
     'jar': 'application/java-archive'
@@ -24,17 +18,21 @@ files:
     'm68k': 'donotcheck'
     'mips': 'donotcheck'
     'mpsl': 'donotcheck'
+    # 'php': 'donotcheck'
     'ppc': 'donotcheck'
     'ppt': 'application/vnd.ms-powerpoint'
     'ps1': 'donotcheck'
     'py': 'donotcheck'
+    # 'rar': 'application/x-rar'
     'sh': 'donotcheck'
     'sh4': 'donotcheck'
     'spc': 'donotcheck'
+    # 'tar': 'donotcheck'
     'vb': 'donotcheck'
     'vbs': 'donotcheck'
     'xls': 'application/vnd.ms-excel'
     'xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    'zip': 'application/zip'
 
 # ------------------------------------------------------------------------------
 
@@ -42,7 +40,7 @@ keywords:
 # Any changes must use the same format.
 # This section cannot be empty.
 
-# Generic suspicious
+# Generic
     'account': 40
     'activity': 25
     'alert': 25
