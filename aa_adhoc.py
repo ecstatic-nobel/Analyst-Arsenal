@@ -4,23 +4,21 @@ Description:
 - Make requests to the domains retrieved from a file
 - Recursively download the site when an open directory hosting a file with the desired file extension
 
-3 positional arguments needed:
+1 positional arguments needed:
 - Input File : Path to the file containing URLs
-- File Extension : 7z, apk, bat, bz, bz2, crypt, dll, doc, docx, exe, gz, hta, iso, jar, json, lnk, ppt, ps1, py, rar, sfx, sh, tar, vb, vbs, xld, xls, xlsx, zip
 
 Optional arguments:
-- --file-dir     : Directory to use for interesting files detected (default: ./InterestingFiles/)
-- --kit-dir      : Directory to use for phishing kits detected (default: ./KitJackinSeason/)
+- --directory    : Save data to CAP_DIR (default: ./Captures/)
 - --level        : Recursion depth (default=1, infinite=0)
 - --quiet        : Don't show wget output
 - --threads      : Numbers of threads to spawn
-- --timeout      : Set time to wait for a connection
+- --timeout      : Set the connection timeout to TIMEOUT
 - --tor          : Download files via the Tor network
 - --very-verbose : Show error messages
 
 Usage:
 ```
-python aa_adhoc.py <INPUT_FILE> <FILE_EXTENSION> [--file-dir] [--kit-dir] [--level] [--quiet] [--threads] [--timeout] [--tor] [--very-verbose]
+python aa_adhoc.py <INPUT_FILE> [--directory] [--level] [--quiet] [--threads] [--timeout] [--tor] [--very-verbose]
 ```
 
 Debugger: open("/tmp/aa.txt", "a").write("{}: <MSG>\n".format(<VAR>))
@@ -36,23 +34,14 @@ parser = argparse.ArgumentParser(description="Attempt to detect phishing kits an
 parser.add_argument(metavar="input file",
                     dest="input_file",
                     help="Path to the file containing URLs")
-parser.add_argument(metavar="file extension",
-                    dest="ext",
-                    choices=["7z", "apk", "bat", "bz", "bz2", "crypt", "dll", "doc", "docx", "exe", "gz", "hta", "iso", "jar", "json", "lnk", "ppt", "ps1", "py", "rar", "sfx", "sh", "tar", "vb", "vbs", "xld", "xls", "xlsx", "zip"],
-                    help="7z, apk, bat, bz, bz2, crypt, dll, doc, docx, exe, gz, hta, iso, jar, json, lnk, ppt, ps1, py, rar, sfx, sh, tar, vb, vbs, xld, xls, xlsx, zip")
-parser.add_argument("--file-dir",
-                    dest="file_dir",
-                    default="./InterestingFile/",
+parser.add_argument("--directory",
+                    dest="cap_dir",
+                    default="./Captures/",
                     required=False,
-                    help="Directory to use for interesting files detected (default: ./InterestingFiles)")
-parser.add_argument("--kit-dir",
-                    dest="kit_dir",
-                    default="./KitJackinSeason/",
-                    required=False,
-                    help="Directory to use for phishing kits detected (default: ./KitJackinSeason)")
+                    help="Download data to CAP_DIR (default: ./Captures)")
 parser.add_argument("--level",
                     dest="level",
-                    default=0,
+                    default=1,
                     required=False,
                     type=str,
                     help="Directory depth (default=1, infinite=0")
@@ -72,7 +61,7 @@ parser.add_argument("--timeout",
                     default=30,
                     required=False,
                     type=int,
-                    help="Set time to wait for a connection")
+                    help="Set the connection timeout to TIMEOUT")
 parser.add_argument("--tor",
                     dest="tor",
                     action="store_true",
@@ -83,11 +72,8 @@ parser.add_argument("--very-verbose",
                     action="store_true",
                     required=False,
                     help="Show error messages")
-args = parser.parse_args()
-uagent = "Mozilla/5.0 (Windows NT 6.3; Trident/7.0; rv:11.0) like Gecko"
-
 # Fix directory names
-args = commons.fix_directory(args)
+args = commons.fix_directory(parser.parse_args())
 
 def main():
     """ """
@@ -96,36 +82,28 @@ def main():
 
     # Print start messages
     commons.show_summary(args)
-    commons.show_networking(args, uagent)
+    commons.show_networking(args) # globals: proxies, torsocks
 
-    # Read suspicious.yaml
-    suspicious = commons.read_suspicious(args)
+    # Read config.yaml
+    commons.read_config(args) # globals: config
 
     # Recompile exclusions
-    commons.recompile_exclusions()
+    commons.recompile_exclusions() # globals: exclusions
 
-    # Build dict of extensions
-    extensions = {}
-    extensions.update(suspicious["archives"])
-    extensions.update(suspicious["files"])
+    # Create queues
+    url_queue = commons.create_queue("url_queue")
+
+    # Create threads
+    commons.UrlQueueManager(args, url_queue)
 
     # Read file containing URLs
     urls = commons.read_file(args.input_file)
 
-    # Create queues
-    recursion_queue = commons.create_queue("recursion_queue")
-
-    # Create threads
-    commons.RecursiveQueueManager(args, recursion_queue, uagent, extensions)
-
     # Process URLs
     for url in urls:
-        if not (url.startswith("http://") or url.startswith("https://")):
-            continue
+        url_queue.put(url)
 
-        recursion_queue.put(url)
-
-    recursion_queue.join()
+    url_queue.join()
     return
 
 if __name__ == "__main__":
