@@ -460,7 +460,7 @@ def read_config(args):
             external_error(key, "config")
             exit()
 
-    if "dns_twist" in args:
+    if "dns_twist" in args and args.dns_twist:
         with open("dns_twisted.yaml", "r") as f:
             dns_twisted = yaml.safe_load(f)
 
@@ -498,10 +498,13 @@ def redirect_message(resp):
 
 def score_domain(config, domain, args):
     """ """
+    # dbugger = ['------------------------------------------------------------']
+    # dbugger.append(domain)
     score = 0
     for t in config["tlds"]:
         if domain.endswith(t):
             score += 20
+            # dbugger.append("TLD: {}".format(t))
 
     try:
         res = get_tld(domain, as_object=True, fail_silently=True, fix_protocol=True)
@@ -513,28 +516,41 @@ def score_domain(config, domain, args):
         pass
 
     score += int(round(entropy.shannon_entropy(domain)*50))
+    # dbugger.append("Entropy: {}".format(int(round(entropy.shannon_entropy(domain)*50))))
 
     domain          = unconfuse(domain)
     words_in_domain = re.split(r"\W+", domain)
 
     if words_in_domain[0] in ["com", "net", "org"]:
         score += 10
+        # dbugger.append("Com-net-org: {}".format(words_in_domain[0]))
 
     for word in config["keywords"]:
         if word in domain:
             score += config["keywords"][word]
+            # dbugger.append("Keyword: {}".format(len(config["keywords"])))
+            # dbugger.append("Keyword: {}".format(word))
 
     for key in [k for (k,s) in config["keywords"].items() if s >= 70]:
         for word in [w for w in words_in_domain if w not in ["email", "mail", "cloud"]]:
             if distance(str(word), str(key)) == 1:
                 score += 70
+                # dbugger.append("Distance: {}, {}".format(str(word), str(key)))
 
     if "xn--" not in domain and domain.count("-") >= 4:
         score += domain.count("-") * 3
+        # dbugger.append("Count dashes: {}".format(domain.count(".")))
 
     if domain.count(".") >= 3:
         score += domain.count(".") * 3
+        # dbugger.append("Count period: {}".format(domain.count(".")))
 
+    # dbugger.append("\nScore: {}".format(score))
+    # dbugger.append('------------------------------------------------------------')
+
+    # with open("dbug_file", "a") as dbug_file:
+    #     for dbug in dbugger:
+    #         dbug_file.write("{}\n".format(dbug))
     return score
 
 def show_networking(args):
