@@ -139,7 +139,7 @@ def main():
     domains = commons.get_domains(args)
 
     print(colored("Scoring and checking the domains...\n", "yellow", attrs=["bold"]))
-    for domain in domains:
+    for domain in (sorted(domains)):
         domain_queue.put(domain)
 
     domain_queue.join()
