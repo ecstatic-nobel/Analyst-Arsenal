@@ -133,7 +133,7 @@ class UrlQueueManager():
         # globals torsocks
         self.args       = args
         self.url_queue  = url_queue
-        self.extensions = config["extensions"].keys()
+        self.extensions = config["extensions"]
         self.ext_csv    = ",".join(self.extensions)
 
         print(colored("Creating {} threads...\n".format(self.args.threads), "yellow", attrs=["bold"]))
@@ -178,7 +178,8 @@ class UrlQueueManager():
                 self.url_queue.task_done()
                 continue
 
-            if "Index of /" in resp.content:
+            # Open Directory
+            if "index of /" in resp.content.lower():
                 for ext in self.extensions:
                     if ".{}<".format(ext) not in resp.content.lower():
                         continue
@@ -190,12 +191,39 @@ class UrlQueueManager():
                         break
                     elif action == "continue":
                         continue
+            # Banking phish
+            elif ">interac e-transfer<" in resp.content.lower() and ">select your financial institution<" in resp.content.lower():
+                download_message("(Banking phish found)", url)
+                self.ext_csv = self.ext_csv + "html,php"
+                download_site(self.args, day, domain, self.ext_csv, url)
+                self.ext_csv = self.ext_csv[-8]
+            # Deliberate obfuscation - suspicious
+            elif "<script>document.write(unescape('" in resp.content.lower():
+                download_message("(Obfuscated Javascript found)", url)
+                self.ext_csv = self.ext_csv + "html,php"
+                download_site(self.args, day, domain, self.ext_csv, url)
+                self.ext_csv = self.ext_csv[-8]
+            # Hosted file
             elif "Content-Disposition" in resp.headers:
-                attachment = resp.headers["Content-Disposition"].split("=")[1].replace('"', '')
+                download_message("(Attachment found)", url)
+                download_site(self.args, day, domain, self.ext_csv, url)
+            # String seen in downloaded file during urlscan.io scan
+            elif "query_string" in self.args and self.args.query_string in url:
+                download_message("(Query String found)", url)
+                download_site(self.args, day, domain, self.ext_csv, url)
+            # Catch-all - search for extensions in URL
+            else:
+                for ext in self.extensions:
+                    if not (url.endswith(".{}".format(ext)) or ".{}/".format(ext) in url or ".{}?".format(ext) in url):
+                        continue
 
-                if "ext" in self.args and attachment.endswith(".{}".format(self.args.ext)):
-                    download_message("(Attachment found)", url)
-                    download_site(self.args, day, domain, self.ext_csv, url)
+                    download_message("(Extension found)", url)
+
+                    action = download_site(self.args, day, domain, self.ext_csv, url)
+                    if action == "break":
+                        break
+                    elif action == "continue":
+                        continue
             self.url_queue.task_done()
         return
 
@@ -230,6 +258,11 @@ def download_site(args, day, domain, ext_csv, url):
     """ """
     directory = "{}{}".format(args.cap_dir, day)
 
+    # Split URL into parts
+    split_url = url.split("/")
+    protocol  = split_url[0]
+    root_url  = "{}//{}/".format(protocol, domain)
+
     try:
         if not os.path.exists("{}/{}".format(directory, domain)):
             os.makedirs("{}/{}".format(directory, domain))
@@ -249,9 +282,14 @@ def download_site(args, day, domain, ext_csv, url):
                                    directory,
                                    uagent,
                                    ext_csv,
-                                   url)
+                                   root_url)
+        proc     = subprocess.Popen(wget_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
+        out, err = proc.communicate()
 
-        subprocess.call(wget_command)
+        if "301 Moved Permanently" in err or "302 Found" in err or "307 Temporary Redirect" in err:
+            failed_message(args, "Redirects exceeded", root_url)
+            os.rmdir("{}/{}".format(directory, domain))
+            return "break"
 
         complete_message(url)
         return "break"
@@ -299,6 +337,7 @@ def format_wget(args, directory, uagent, ext_csv, url):
         "--execute=robots=off",
         "--tries=2",
         "--no-clobber",
+        "--server-response",
         "--timeout={}".format(args.timeout),
         "--waitretry=0",
         "--directory-prefix={}".format(directory),
@@ -316,6 +355,9 @@ def format_wget(args, directory, uagent, ext_csv, url):
 
     if args.quiet:
         wget_command.append("--quiet")
+
+    if "max_redirect" in args:
+        wget_command.append("--max-redirect={}".format(args.max_redirect))
 
     wget_command.append(url)
     return wget_command
@@ -403,8 +445,8 @@ def query_urlscan(args):
     """Request URLs from urlscan.io"""
     try:
         print(colored("Querying urlscan.io for URLs...\n", "yellow", attrs=["bold"]))
-        api  = "https://urlscan.io/api/v1/search/?q={}%20AND%20filename%3A.{}&size=10000"
-        resp = requests.get(api.format(config["queries"][args.query_type], args.ext),
+        api  = "https://urlscan.io/api/v1/search/?q={}%20AND%20filename%3A{}&size=10000"
+        resp = requests.get(api.format(config["queries"][args.query_type], args.query_string),
                             proxies=proxies,
                             headers={"User-Agent": uagent},
                             timeout=args.timeout,
@@ -434,18 +476,7 @@ def query_urlscan(args):
         if analysis_time < timespan:
             break
 
-        url = result["page"]["url"]
-
-        # Build list of URLs ending with specified extension or Mime-Type
-        if url.endswith('.{}'.format(args.ext)):
-            urls.append(url)
-            continue
-    
-        if "files" in result.keys():
-            for filename in result["files"]:
-                if filename["mimeType"].startswith(config["extensions"][args.ext]):
-                    urls.append(url)
-                    break
+        urls.append(result["page"]["url"])
     return urls
 
 def read_config(args):
@@ -597,8 +628,6 @@ def show_summary(args):
         print("    query_type     : {}".format(args.query_type.lower()))
     if "delta" in args:
         print("    delta          : {}".format(args.delta))
-    if "ext" in args:
-        print("    extension      : {}".format(args.ext))
     print("    directory      : {}".format(args.cap_dir))
     if "dns_twist" in args:
         print("    dns_twist      : {}".format(args.dns_twist))
@@ -607,9 +636,12 @@ def show_summary(args):
     print("    level          : {}".format(args.level))
     if "log_nc" in args:
         print("    log_file       : {}".format(args.log_nc))
-    print("    quiet          : {}".format(args.quiet))
+    if "max_redirect" in args:
+        print("    max_redirect   : {}".format(args.max_redirect))
     if "score" in args:
         print("    minimum_score  : {}".format(args.score))
+    if "query_string" in args:
+        print("    query_string   : {}".format(args.query_string))
     print("    quiet          : {}".format(args.quiet))
     print("    threads        : {}".format(args.threads))
     print("    timeout        : {}".format(args.timeout))
