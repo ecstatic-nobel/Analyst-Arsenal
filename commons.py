@@ -185,12 +185,12 @@ class UrlQueueManager():
                 #         continue
 
                 download_message("('Index of /' found)", url)
-
-                action = download_site(self.args, day, domain, self.ext_csv, url)
-                if action == "break":
-                    break
-                elif action == "continue":
-                    continue
+                download_site(self.args, day, domain, self.ext_csv, url)
+                # action = download_site(self.args, day, domain, self.ext_csv, url)
+                # if action == "break":
+                #     break
+                # elif action == "continue":
+                #     continue
             # Banking phish
             elif ">interac e-transfer<" in resp.content.lower() and ">select your financial institution<" in resp.content.lower():
                 download_message("(Banking phish found)", url)
@@ -291,15 +291,18 @@ def download_site(args, day, domain, ext_csv, url):
         if "301 Moved Permanently" in err or "302 Found" in err or "307 Temporary Redirect" in err:
             failed_message(args, "Redirects exceeded", root_url)
             os.rmdir(domain_dir)
-            return "break"
+            # return "break"
+            return
 
         complete_message(url)
-        remove_empty(domain_dir)
-        return "break"
+        remove_empty(domain_dir, args)
+        # return "break"
+        return
     except Exception as err:
         failed_message(args, err, url)
-        remove_empty(domain_dir)
-        return "continue"
+        remove_empty(domain_dir, args)
+        # return "continue"
+        return
 
 def external_error(key, filename):
     """ """
@@ -532,19 +535,18 @@ def redirect_message(resp):
     ))
     return redirect
 
-def remove_empty(domain_dir):
+def remove_empty(domain_dir, args):
     """Remove empty files and directories"""
-    # for root, dirs, files in os.walk(dir_path,topdown=False):
-    #     for name in dirs:
-    #         fname = os.path.join(root,name)
-    #         if not os.listdir(fname):
-    #             os.removedirs(fname)
-    #             tqdm.tqdm.write("{}: {} (Removing)".format(
-    #                 message_header("empty"), 
-    #                 colored(fname, "red", attrs=["underline"])
-    #             ))
-    subprocess.call(["find", domain_dir, "-empty", "-type", "f", "-delete"])
-    subprocess.call(["find", domain_dir, "-empty", "-type", "d", "-delete"])
+    tqdm.tqdm.write("{}: {} (Removing)".format(
+        message_header("empty"), 
+        colored(domain_dir, "red", attrs=["underline"])
+    ))
+
+    try:
+        subprocess.call(["find", domain_dir, "-empty", "-type", "f", "-delete"])
+        subprocess.call(["find", domain_dir, "-empty", "-type", "d", "-delete"])
+    except Exception as err:
+        failed_message(args, err, domain_dir)
     return
 
 def score_domain(config, domain, args):
