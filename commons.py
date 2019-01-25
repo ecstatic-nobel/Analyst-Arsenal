@@ -180,17 +180,17 @@ class UrlQueueManager():
 
             # Open Directory
             if "index of /" in resp.content.lower():
-                for ext in self.extensions:
-                    if ".{}<".format(ext) not in resp.content.lower():
-                        continue
+                # for ext in self.extensions:
+                #     if ".{}<".format(ext) not in resp.content.lower():
+                #         continue
 
-                    download_message("('Index of /' found)", url)
+                download_message("('Index of /' found)", url)
 
-                    action = download_site(self.args, day, domain, self.ext_csv, url)
-                    if action == "break":
-                        break
-                    elif action == "continue":
-                        continue
+                action = download_site(self.args, day, domain, self.ext_csv, url)
+                if action == "break":
+                    break
+                elif action == "continue":
+                    continue
             # Banking phish
             elif ">interac e-transfer<" in resp.content.lower() and ">select your financial institution<" in resp.content.lower():
                 download_message("(Banking phish found)", url)
@@ -259,22 +259,24 @@ def download_site(args, day, domain, ext_csv, url):
     directory = "{}{}".format(args.cap_dir, day)
 
     # Split URL into parts
-    split_url = url.split("/")
-    protocol  = split_url[0]
-    root_url  = "{}//{}/".format(protocol, domain)
+    split_url  = url.split("/")
+    protocol   = split_url[0]
+    root_url   = "{}//{}/".format(protocol, domain)
+
+    domain_dir = "{}/{}".format(directory, domain)
 
     try:
-        if not os.path.exists("{}/{}".format(directory, domain)):
-            os.makedirs("{}/{}".format(directory, domain))
+        if not os.path.exists(domain_dir):
+            os.makedirs(domain_dir)
 
-        if not os.path.exists("{}/{}".format(directory, domain)):
+        if not os.path.exists(domain_dir):
             tqdm.tqdm.write(colored("{}: {} is temporarily unavailable.".format(
                 message_header("directory"), 
-                "{}/{}".format(directory, domain)
+                domain_dir
             ), "red", attrs=["underline"]))
             tqdm.tqdm.write(colored("{}: Waiting 60s for {} to become available...".format(
                 message_header("directory"), 
-                "{}/{}".format(directory, domain)), "red", attrs=["underline"]
+                domain_dir), "red", attrs=["underline"]
             ))
             time.sleep(60)
 
@@ -288,13 +290,15 @@ def download_site(args, day, domain, ext_csv, url):
 
         if "301 Moved Permanently" in err or "302 Found" in err or "307 Temporary Redirect" in err:
             failed_message(args, "Redirects exceeded", root_url)
-            os.rmdir("{}/{}".format(directory, domain))
+            os.rmdir(domain_dir)
             return "break"
 
         complete_message(url)
+        remove_empty(domain_dir)
         return "break"
     except Exception as err:
         failed_message(args, err, url)
+        remove_empty(domain_dir)
         return "continue"
 
 def external_error(key, filename):
@@ -428,6 +432,7 @@ def message_header(message_type):
         "critical"  : "[!] Critical  ",
         "directory" : "[/] Directory ",
         "download"  : "[~] Download  ",
+        "empty"     : "[X] Empty     ",
         "error"     : "[!] Error     ",
         "excluded"  : "[*] Excluded  ",
         "failed"    : "[!] Failed    ",
@@ -526,6 +531,21 @@ def redirect_message(resp):
         colored(redirect, "green")
     ))
     return redirect
+
+def remove_empty(domain_dir):
+    """Remove empty files and directories"""
+    # for root, dirs, files in os.walk(dir_path,topdown=False):
+    #     for name in dirs:
+    #         fname = os.path.join(root,name)
+    #         if not os.listdir(fname):
+    #             os.removedirs(fname)
+    #             tqdm.tqdm.write("{}: {} (Removing)".format(
+    #                 message_header("empty"), 
+    #                 colored(fname, "red", attrs=["underline"])
+    #             ))
+    subprocess.call(["find", domain_dir, "-empty", "-type", "f", "-delete"])
+    subprocess.call(["find", domain_dir, "-empty", "-type", "d", "-delete"])
+    return
 
 def score_domain(config, domain, args):
     """ """
