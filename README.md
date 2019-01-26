@@ -40,6 +40,7 @@ The following command will:
 Optional arguments:  
 - **--directory**    : Download data to CAP_DIR (default: ./Captures)  
 - **--level**        : Recursion depth (default=1, infinite=0)  
+- **--max-redirect** : Maximum redirects (default=0)  
 - **--quiet**        : Don't show wget output  
 - **--threads**      : Numbers of threads to spawn  
 - **--timeout**      : Set the connection timeout to TIMEOUT  
@@ -47,7 +48,7 @@ Optional arguments:
 - **--very-verbose** : Show error messages  
 
 ```bash  
-python aa_adhoc.py <INPUT_FILE> [--directory] [--level] [--quiet] [--threads] [--timeout] [--tor] [--very-verbose]  
+python aa_adhoc.py <INPUT_FILE> [--directory] [--level] [--max-redirect] [--quiet] [--threads] [--timeout] [--tor] [--very-verbose]  
 ```  
 
 **aa_certstream**  
@@ -82,11 +83,12 @@ The following command will:
 3 positional arguments needed:  
 - **Query Type**     : automatic, manual, certstream, openphish, phishtank, twitter, urlhaus  
 - **Delta**          : Number of days back to search (GMT)  
-- **File Extension** : 7z, apk, bat, bz, bz2, crypt, dll, doc, docx, exe, gz, hta, iso, jar, json, lnk, ppt, ps1, py, rar, sfx, sh, tar, vb, vbs, xld, xls, xlsx, zip  
+- **Query String**   : String to search (and does not include spaces)  
 
 Optional arguments:  
 - **--directory**    : Download data to CAP_DIR (default: ./Captures)  
 - **--level**        : Recursion depth (default=1, infinite=0)  
+- **--max-redirect** : Maximum redirects (default=0)  
 - **--quiet**        : Don't show wget output  
 - **--threads**      : Numbers of threads to spawn  
 - **--timeout**      : Set the connection timeout to TIMEOUT  
@@ -94,7 +96,7 @@ Optional arguments:
 - **--very-verbose** : Show error messages  
 
 ```bash  
-python aa_urlscan.py <QUERY_TYPE> <DELTA> <FILE_EXTENSION> [[--directory] [--level] [--quiet] [--threads] [--timeout] [--tor] [--very-verbose]  
+python aa_urlscan.py <QUERY_TYPE> <DELTA> <QUERY_STRING> [--directory] [--level] [--max-redirect] [--quiet] [--threads] [--timeout] [--tor] [--very-verbose]  
 ```  
 **Note**: If the path is a file, it will be automatically downloaded.  
 
@@ -129,14 +131,15 @@ python aa_whoisds.py <DELTA> [--dns-twist] [--directory] [--level] [--log-nc] [-
 - Downloads via Tor happen over **127.0.0.1:9050**  
 - These scripts **will not** check Torsocks settings  
 - Output messages:  
-  - **Session**: checking the site for data included in `external.yaml`  
-  - **Failed**: a connection to the site couldn't be made  
+  - **Complete**: download complete or the site canceled it prematurely  
   - **Critical**: a domain was found with a score above 120  
+  - **Directory**: the output directory is unavailable  
+  - **Download**: checks passed and a download was started  
+  - **Empty**: the output directory was empty and removed  
+  - **Failed**: a connection to the site couldn't be made  
+  - **Session**: checking the site for data included in `external.yaml`  
   - **Suspicious**: a domain was found with a score above 90  
   - **Triggered**: a domain was found with the minimum score specified  
-  - **Download**: checks passed and a download was started  
-  - **Complete**: download complete or the site canceled it prematurely  
-  - **Directory**: the output directory is unavailable  
 - If the keywords in `config.yaml` have been modified and `--dns-twist` is going to be used, regenerate `dns_twisted.yaml` by running the following command:  
     ```bash
     bash dnstwist.sh PATH_TO_DNSTWIST_SCRIPT
