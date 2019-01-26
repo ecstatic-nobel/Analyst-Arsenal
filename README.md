@@ -128,8 +128,6 @@ python aa_whoisds.py <DELTA> [--dns-twist] [--directory] [--level] [--log-nc] [-
 
 ### Things to know  
 - Be responsible!!!  
-- Downloads via Tor happen over **127.0.0.1:9050**  
-- These scripts **will not** check Torsocks settings  
 - Output messages:  
   - **Complete**: download complete or the site canceled it prematurely  
   - **Critical**: a domain was found with a score above 120  
@@ -140,10 +138,13 @@ python aa_whoisds.py <DELTA> [--dns-twist] [--directory] [--level] [--log-nc] [-
   - **Session**: checking the site for data included in `external.yaml`  
   - **Suspicious**: a domain was found with a score above 90  
   - **Triggered**: a domain was found with the minimum score specified  
+- Check the `queue_file.txt` file to get a better understanding of how large the queue is. If it's too large, either increase the threads, raise the score, or decrease the level.  
 - If the keywords in `config.yaml` have been modified and `--dns-twist` is going to be used, regenerate `dns_twisted.yaml` by running the following command:  
     ```bash
     bash dnstwist.sh PATH_TO_DNSTWIST_SCRIPT
     ```
 - Using the `--dns-twist` flag will default to a minimum of 20 threads  
+- Downloads via Tor happen over **127.0.0.1:9050**  
+- These scripts **will not** check Torsocks settings  
 
 Please fork, create merge requests, and help make this better.  
