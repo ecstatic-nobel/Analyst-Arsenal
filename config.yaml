@@ -509,6 +509,7 @@ exclusions:
     - '^autodiscover\.'
     - '^gameflex\.'
     - '^iframes\.ampify\.ga$'
+    - '^linuxupdateserver\.aradex\.com$'
     - '^STH-for-'
     - '^www\.'
     - 'chat\.kowari\.macmoney\.co\.za$'
