@@ -519,11 +519,14 @@ def remove_empty(domain_dir, args):
         chkdirs  = subprocess.Popen(chk_dirs, stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)        
         out, _   = chkdirs.communicate()
 
-        if out is not None:
-            tqdm.tqdm.write("{}: {} (Removing)".format(
-                message_header("empty"), 
-                colored(domain_dir, "red", attrs=["underline"])
-            ))
+        if out != '':
+            empty_dirs = filter(None, out.split("\n"))
+
+            for empty_dir in empty_dirs:
+                tqdm.tqdm.write("{}: {} (Removing)".format(
+                    message_header("empty"),
+                    colored(empty_dir, "red", attrs=["underline"])
+                ))
             rm_dirs = ["find", domain_dir, "-empty", "-type", "d", "-delete"]
             subprocess.call(rm_dirs)
     except Exception as err:
