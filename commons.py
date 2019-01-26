@@ -180,17 +180,8 @@ class UrlQueueManager():
 
             # Open Directory
             if "index of /" in resp.content.lower():
-                # for ext in self.extensions:
-                #     if ".{}<".format(ext) not in resp.content.lower():
-                #         continue
-
                 download_message("('Index of /' found)", url)
                 download_site(self.args, day, domain, self.ext_csv, url)
-                # action = download_site(self.args, day, domain, self.ext_csv, url)
-                # if action == "break":
-                #     break
-                # elif action == "continue":
-                #     continue
             # Banking phish
             elif ">interac e-transfer<" in resp.content.lower() and ">select your financial institution<" in resp.content.lower():
                 download_message("(Banking phish found)", url)
@@ -437,15 +428,10 @@ def message_header(message_type):
         "download"  : "[~] Download  ",
         "empty"     : "[X] Empty     ",
         "error"     : "[!] Error     ",
-        "excluded"  : "[*] Excluded  ",
         "failed"    : "[!] Failed    ",
-        "likely"    : "[!] Likely    ",
-        "original"  : "[*] Original  ",
-        "redirect"  : "[>] Redirect  ",
         "session"   : "[?] Session   ",
-        "skipping"  : "[-] Skipping  ",
-        "triggered" : "[!] Triggered ",
-        "suspicious": "[!] Suspicious"
+        "suspicious": "[!] Suspicious",
+        "triggered" : "[!] Triggered "
     }
     return headers[message_type]
 
@@ -525,15 +511,6 @@ def recompile_exclusions():
         for exclusion in config["exclusions"]:
             exclusions.append(re.compile(exclusion, re.IGNORECASE))
     return exclusions
-
-def redirect_message(resp):
-    """ """
-    redirect = resp.url
-    tqdm.tqdm.write("{}: {} (Responded with no Content-Type)".format(
-        message_header("redirect"), 
-        colored(redirect, "green")
-    ))
-    return redirect
 
 def remove_empty(domain_dir, args):
     """Remove empty files and directories"""
