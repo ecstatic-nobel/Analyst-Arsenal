@@ -7,11 +7,12 @@ Description:
 3 positional arguments needed:
 - Query Type : automatic, manual, certstream, openphish, phishtank, twitter, urlhaus
 - Delta : Number of days back to search (GMT)
-- File Extension : 7z, apk, bat, bz, bz2, crypt, dll, doc, docx, exe, gz, hta, iso, jar, json, lnk, ppt, ps1, py, rar, sfx, sh, tar, vb, vbs, xld, xls, xlsx, zip
+- Query String : String to search (and does not include spaces)
 
 Optional arguments:
 - --directory    : Save data to CAP_DIR (default: ./Captures/)
 - --level        : Recursion depth (default=1, infinite=0)
+- --max-redirect : Maximum redirects (default=0)
 - --quiet        : Don't show wget output
 - --threads      : Numbers of threads to spawn
 - --timeout      : Set the connection timeout to TIMEOUT
@@ -20,7 +21,7 @@ Optional arguments:
 
 Usage:
 ```
-python aa_urlscan.py <QUERY_TYPE> <DELTA> <FILE_EXTENSION> [--directory] [--level] [--quiet] [--threads] [--timeout] [--tor] [--very-verbose]
+python aa_urlscan.py <QUERY_TYPE> <DELTA> <QUERY_STRING> [--directory] [--level] [--max-redirect] [--quiet] [--threads] [--timeout] [--tor] [--very-verbose]
 ```
 
 Debugger: open("/tmp/aa.txt", "a").write("{}: <MSG>\n".format(<VAR>))
@@ -45,10 +46,9 @@ parser.add_argument(metavar="query type",
 parser.add_argument(dest="delta",
                     type=int,
                     help="Number of days back to search (GMT)")
-parser.add_argument(metavar="file extension",
-                    dest="ext",
-                    choices=["7z", "apk", "bat", "bz", "bz2", "crypt", "dll", "doc", "docx", "exe", "gz", "hta", "iso", "jar", "json", "lnk", "ppt", "ps1", "py", "rar", "sfx", "sh", "tar", "vb", "vbs", "xld", "xls", "xlsx", "zip"],
-                    help="7z, apk, bat, bz, bz2, crypt, dll, doc, docx, exe, gz, hta, iso, jar, json, lnk, ppt, ps1, py, rar, sfx, sh, tar, vb, vbs, xld, xls, xlsx, zip")
+parser.add_argument(metavar="query_string",
+                    dest="query_string",
+                    help="String to search (and does not include spaces)")
 parser.add_argument("--directory",
                     dest="cap_dir",
                     default="./Captures/",
@@ -60,6 +60,12 @@ parser.add_argument("--level",
                     required=False,
                     type=str,
                     help="Directory depth (default=1, infinite=0")
+parser.add_argument("--max-redirect",
+                    dest="max_redirect",
+                    default=0,
+                    required=False,
+                    type=str,
+                    help="Maximum redirects (default=0)")
 parser.add_argument("--quiet",
                     dest="quiet",
                     action="store_true",

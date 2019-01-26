@@ -10,6 +10,7 @@ Description:
 Optional arguments:
 - --directory    : Save data to CAP_DIR (default: ./Captures/)
 - --level        : Recursion depth (default=1, infinite=0)
+- --max-redirect : Maximum redirects (default=0)
 - --quiet        : Don't show wget output
 - --threads      : Numbers of threads to spawn
 - --timeout      : Set the connection timeout to TIMEOUT
@@ -18,7 +19,7 @@ Optional arguments:
 
 Usage:
 ```
-python aa_adhoc.py <INPUT_FILE> [--directory] [--level] [--quiet] [--threads] [--timeout] [--tor] [--very-verbose]
+python aa_adhoc.py <INPUT_FILE> [--directory] [--level] [--max-redirect] [--quiet] [--threads] [--timeout] [--tor] [--very-verbose]
 ```
 
 Debugger: open("/tmp/aa.txt", "a").write("{}: <MSG>\n".format(<VAR>))
@@ -45,6 +46,12 @@ parser.add_argument("--level",
                     required=False,
                     type=str,
                     help="Directory depth (default=1, infinite=0")
+parser.add_argument("--max-redirect",
+                    dest="max_redirect",
+                    default=0,
+                    required=False,
+                    type=str,
+                    help="Maximum redirects (default=0)")
 parser.add_argument("--quiet",
                     dest="quiet",
                     action="store_true",
@@ -101,6 +108,8 @@ def main():
 
     # Process URLs
     for url in urls:
+        if not url.startswith("http"):
+            url = "http://{}".format(url)
         url_queue.put(url)
 
     url_queue.join()
