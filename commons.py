@@ -282,17 +282,14 @@ def download_site(args, day, domain, ext_csv, url):
         if "301 Moved Permanently" in err or "302 Found" in err or "307 Temporary Redirect" in err:
             failed_message(args, "Redirects exceeded", root_url)
             os.rmdir(domain_dir)
-            # return "break"
             return
 
         complete_message(url)
         remove_empty(domain_dir, args)
-        # return "break"
         return
     except Exception as err:
         failed_message(args, err, url)
         remove_empty(domain_dir, args)
-        # return "continue"
         return
 
 def external_error(key, filename):
@@ -514,14 +511,21 @@ def recompile_exclusions():
 
 def remove_empty(domain_dir, args):
     """Remove empty files and directories"""
-    tqdm.tqdm.write("{}: {} (Removing)".format(
-        message_header("empty"), 
-        colored(domain_dir, "red", attrs=["underline"])
-    ))
-
     try:
-        subprocess.call(["find", domain_dir, "-empty", "-type", "f", "-delete"])
-        subprocess.call(["find", domain_dir, "-empty", "-type", "d", "-delete"])
+        rm_files = ["find", domain_dir, "-empty", "-type", "f", "-delete"]
+        subprocess.call(rm_files)
+
+        chk_dirs = ["find", domain_dir, "-empty", "-type", "d"]
+        chkdirs  = subprocess.Popen(chk_dirs, stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)        
+        out, _   = chkdirs.communicate()
+
+        if out is not None:
+            tqdm.tqdm.write("{}: {} (Removing)".format(
+                message_header("empty"), 
+                colored(domain_dir, "red", attrs=["underline"])
+            ))
+            rm_dirs = ["find", domain_dir, "-empty", "-type", "d", "-delete"]
+            subprocess.call(rm_dirs)
     except Exception as err:
         failed_message(args, err, domain_dir)
     return
