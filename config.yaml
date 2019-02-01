@@ -4,36 +4,36 @@ extensions:
 # This section cannot be empty.
     - '7z'
     - 'bat'
-   
+    # - 'bz2'
     - 'crypt'
     - 'dll'
     - 'doc'
     - 'docx'
     - 'exe'
-   
+    # - 'gz'
     - 'hta'
-   
-   
+    # - 'iso'
+    - 'jar'
     - 'lnk'
     - 'm68k'
     - 'mips'
     - 'mpsl'
-   
+    # - 'php'
     - 'ppc'
     - 'ppt'
     - 'ps1'
     - 'py'
-   
+    # - 'rar'
     - 'rumba'
     - 'sh'
     - 'sh4'
     - 'spc'
-   
+    # - 'tar'
     - 'vb'
     - 'vbs'
     - 'xls'
     - 'xlsx'
-   
+    # - 'xml'
     - 'zip'
 
 # ------------------------------------------------------------------------------
@@ -347,13 +347,14 @@ keywords:
     'dropbox': 35
     'ebay': 20
     'github': 30
-    'tibia': 25
     'groupon': 35
+    'maersk': 50
     'mydish': 30
     'netflix': 35
     'salesforce': 50
     'skype': 25
     'spotify': 35
+    'tibia': 25
     'trello': 30
     'verizon': 35
 
@@ -592,6 +593,7 @@ exclusions:
     - '(^|\.)lloydsbank\.com$'
     - '(^|\.)localbitcoins\.com$'
     - '(^|\.)lottomatica\.it$'
+    - '(^|\.)maersk\.com$'
     - '(^|\.)mastercard\.com$'
     - '(^|\.)mbtrading\.com$'
     - '(^|\.)meridianbanker\.com$'
