@@ -10,6 +10,8 @@ With `aa_certstream`, find out when a phishing kit has been staged on a domain. 
 - Report  
 - Analyze  
 
+![aa_certstream](https://raw.githubusercontent.com/ecstatic-nobel/analyst_arsenal/master/static/assets/aa_certstream.gif)  
+
 With `aa_urlscan`, easily search [urlscan.io](https://urlscan.io/) and check sites for malicious files based on predefined file extensions.  
 
 With `aa_whoisds`, download a list of newly registered domains from [WHOIS Domain Search](https://whoisds.com/newly-registered-domains), score the domains, and search for signs of malicious activity.  
