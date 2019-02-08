@@ -25,7 +25,7 @@ extensions:
     - 'py'
     # - 'rar'
     - 'rumba'
-    - 'sh'
+    # - 'sh'
     - 'sh4'
     - 'spc'
     # - 'tar'
@@ -80,6 +80,7 @@ keywords:
     'support': 35
     'tax': 15
     'transaction': 55
+    'transfer': 40
     'unlock': 30
     'update': 30
     'verification': 60
@@ -147,6 +148,7 @@ keywords:
     'discovery': 45
     'entromoney': 50
     'eppicard': 40
+    'fichiers': 40
     'fifththirdbank': 70
     'firstdirect': 55
     'firstfedca': 40
@@ -163,7 +165,9 @@ keywords:
     'huntington': 50
     'idex': 20
     'independentbank': 75
+    'indexexchange': 65
     'ing': 15
+    'interac': 35
     'interactivebrokers': 90
     'intesasanpaolo': 70
     'itau': 20
@@ -237,6 +241,9 @@ keywords:
     'westernunion': 60
     'westpac': 35
 
+# Coffee
+    'starbucks': 45
+
 # Cryptocurrency
     'bibox': 25
     'binance': 35
@@ -281,6 +288,23 @@ keywords:
     'windows': 35
     'yahoo': 25
     'yandex': 30
+
+# Insurance
+    'geico': 25
+    'philamlife': 50
+
+# Logistics
+    'ceva': 20
+    'dhl': 15
+    'fedex': 25
+    'kuehne': 30
+    'lbcexpress': 50
+    'maersk': 30
+    'panalpina': 45
+    'robinson': 40
+    'schenker': 40
+    'sncf': 20
+    'ups': 15
 
 # Malware
     '16shop': 30
@@ -339,6 +363,7 @@ keywords:
     'aetna': 25
     'americanairlines': 80
     'americangreetings': 85
+    'baracuda': 40
     'cabletv': 35
     'careerbuilder': 65
     'coxcable': 40
@@ -346,11 +371,12 @@ keywords:
     'docusign': 40
     'dropbox': 35
     'ebay': 20
+    'flash': 25
     'github': 30
     'groupon': 35
-    'maersk': 50
     'mydish': 30
     'netflix': 35
+    'pandora': 35
     'salesforce': 50
     'skype': 25
     'spotify': 35
@@ -480,6 +506,7 @@ exclusions:
     - '(^|\.)bankmillennium\.pl$'
     - '(^|\.)bankofamerica\.com$'
     - '(^|\.)bankofthewest\.com$'
+    - '(^|\.)baracuda\.com$'
     - '(^|\.)barclays\.co\.uk$'
     - '(^|\.)bb\.com\.br$'
     - '(^|\.)belfius\.be$'
@@ -510,6 +537,8 @@ exclusions:
     - '(^|\.)careerbuilder\.com$'
     - '(^|\.)centurylink\.com$'
     - '(^|\.)certsbridge\.com$'
+    - '(^|\.)cevalogistics\.com$'
+    - '(^|\.)chrobinson\.com$'
     - '(^|\.)cibc\.com$'
     - '(^|\.)cimbbank\.com\.sg$'
     - '(^|\.)citi\.com$'
@@ -533,8 +562,10 @@ exclusions:
     - '(^|\.)cua\.com\.au$'
     - '(^|\.)dashlane\.com$'
     - '(^|\.)db\.com$'
+    - '(^|\.)dbschenker\.com$'
     - '(^|\.)delta\.com$'
     - '(^|\.)desjardins\.com$'
+    - '(^|\.)dhl\.com$'
     - '(^|\.)dinersclub\.com$'
     - '(^|\.)directtv\.com$'
     - '(^|\.)discover\.com$'
@@ -546,6 +577,7 @@ exclusions:
     - '(^|\.)eppicard\.com$'
     - '(^|\.)europabank\.be$'
     - '(^|\.)facebook\.com$'
+    - '(^|\.)fedex\.com$'
     - '(^|\.)filemaker-cloud\.com$'
     - '(^|\.)fintro\.be$'
     - '(^|\.)firstdirect\.com$'
@@ -555,6 +587,7 @@ exclusions:
     - '(^|\.)franklintempleton\.com$'
     - '(^|\.)gardenislandfcu\.com$'
     - '(^|\.)gatherfcu\.org$'
+    - '(^|\.)geico\.com$'
     - '(^|\.)github\.com$'
     - '(^|\.)gofundme\.com$'
     - '(^|\.)google\.com$'
@@ -571,6 +604,7 @@ exclusions:
     - '(^|\.)icloud\.com$'
     - '(^|\.)idex\.market$'
     - '(^|\.)independentbank\.com$'
+    - '(^|\.)indexexchange\.ae$'
     - '(^|\.)ing\.com$'
     - '(^|\.)instagram\.com$'
     - '(^|\.)interactivebrokers\.com$'
@@ -582,10 +616,12 @@ exclusions:
     - '(^|\.)kgefcu\.org$'
     - '(^|\.)kiwibank\.co\.nz$'
     - '(^|\.)kraken\.com$'
+    - '(^|\.)kuehne-nagel\.com$'
     - '(^|\.)lakebtc\.com$'
     - '(^|\.)laposte\.fr$'
     - '(^|\.)lastpass\.com$'
     - '(^|\.)latam\.com$'
+    - '(^|\.)lbcexpress\.com$'
     - '(^|\.)leboncoin\.fr$'
     - '(^|\.)legalbrandmarketing\.com$'
     - '(^|\.)linkedin\.com$'
@@ -627,6 +663,7 @@ exclusions:
     - '(^|\.)outlook\.com$'
     - '(^|\.)overstock\.com$'
     - '(^|\.)pagseguro\.uol\.com\.br$'
+    - '(^|\.)panalpina\.com$'
     - '(^|\.)paxful\.com$'
     - '(^|\.)payeer\.com$'
     - '(^|\.)paypal\.com$'
@@ -634,6 +671,7 @@ exclusions:
     - '(^|\.)peoples\.com$'
     - '(^|\.)perfectmoney\.is$'
     - '(^|\.)permanenttsb\.ie$'
+    - '(^|\.)philamlife\.com$'
     - '(^|\.)pintrest\.com$'
     - '(^|\.)playapps\.download$'
     - '(^|\.)pnc\.com$'
@@ -646,6 +684,7 @@ exclusions:
     - '(^|\.)rackspace\.com$'
     - '(^|\.)rbcroyalbank\.com$'
     - '(^|\.)reddit\.com$'
+    - '(^|\.)redditreaper\.tech'
     - '(^|\.)remotewd\.com$'
     - '(^|\.)safra\.com$'
     - '(^|\.)salemfive\.com$'
@@ -659,9 +698,11 @@ exclusions:
     - '(^|\.)skyfinancial(loans)?\.com$'
     - '(^|\.)skype\.com$'
     - '(^|\.)smile\.co\.uk$'
+    - '(^|\.)sncf\.com$'
     - '(^|\.)solidtrustpay\.com$'
     - '(^|\.)spotify\.com$'
     - '(^|\.)spotify\.me$'
+    - '(^|\.)starbucks\.com$'
     - '(^|\.)standardbank\.com$'
     - '(^|\.)steampowered\.com$'
     - '(^|\.)stgeorge\.com\.au$'
@@ -678,6 +719,8 @@ exclusions:
     - '(^|\.)tutanota\.com$'
     - '(^|\.)twitter\.com$'
     - '(^|\.)unicredit\.it$'
+    - '(^|\.)update\.orfelin\.com$'
+    - '(^|\.)ups\.com$'
     - '(^|\.)usaa\.com$'
     - '(^|\.)usbank\.com$'
     - '(^|\.)usgovcloudapi\.net$'
