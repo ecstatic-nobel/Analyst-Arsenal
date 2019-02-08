@@ -19,8 +19,10 @@ With `aa_whoisds`, download a list of newly registered domains from [WHOIS Domai
 ### Prerequisites  
 - Ubuntu 18.04+ (should work on other Linux distros)  
 - Python 2.7.14  
-- Git  
-- Torsocks (optional: used with flag `--tor`)  
+- DEB Packages:  
+  - gcc  
+  - Git (optional)  
+  - Torsocks (optional: used with flag `--tor`)  
 
 ### Setup  
 1. Open a terminal and run the following command:  
@@ -61,6 +63,7 @@ The following command will:
 - Recursively download the site when an open directory is found hosting a file with a particular extension  
 
 Optional arguments:  
+- **--ctl-server**   : Certstream server URL to connect to
 - **--dns-twist**    : Check the twisted keywords found in dns_twisted.yaml  
 - **--directory**    : Download data to CAP_DIR (default: ./Captures)  
 - **--level**        : Recursion depth (default=1, infinite=0)  
@@ -74,7 +77,7 @@ Optional arguments:
 - **--very-verbose** : Show error messages  
 
 ```bash  
-python aa_certstream.py [--dns-twist] [--directory] [--level] [--log-nc] [--quiet] [--score] [--threads] [--timeout] [--tor] [--verbose] [--very-verbose]  
+python aa_certstream.py [--ctl-server] [--dns-twist] [--directory] [--level] [--log-nc] [--quiet] [--score] [--threads] [--timeout] [--tor] [--verbose] [--very-verbose]  
 ```  
 
 **aa_urlscan**  
