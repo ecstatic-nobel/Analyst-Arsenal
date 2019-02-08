@@ -7,6 +7,7 @@ Description:
 - Recursively download the site when an open directory is found hosting a file with a particular extension
 
 Optional arguments:
+- --ctl-server   : Certstream server URL to connect to
 - --dns-twist    : Check the twisted keywords found in dns_twisted.yaml
 - --directory    : Save data to CAP_DIR (default: ./Captures/)
 - --level        : Recursion depth (default=1, infinite=0)
@@ -21,7 +22,7 @@ Optional arguments:
 
 Usage:
 ```
-python aa_certstream.py [--dns-twist] [--directory] [--level] [--log-nc] [--quiet] [--score] [--threads] [--timeout] [--tor] [--verbose] [--very-verbose]
+python aa_certstream.py [--ctl-server] [--dns-twist] [--directory] [--level] [--log-nc] [--quiet] [--score] [--threads] [--timeout] [--tor] [--verbose] [--very-verbose]
 ```
 
 Debugger: open("/tmp/aa.txt", "a").write("{}: <MSG>\n".format(<VAR>))
@@ -44,6 +45,11 @@ import commons
 parser = argparse.ArgumentParser(
     description="Attempt to detect phishing kits and open directories via Certstream."
 )
+parser.add_argument("--ctl-server",
+                    dest="ctl_server",
+                    default="wss://certstream.calidog.io",
+                    required=False,
+                    help="Certstream server URL to connect to")
 parser.add_argument("--dns-twist",
                     dest="dns_twist",
                     action="store_true",
@@ -232,7 +238,7 @@ def main():
     print(colored("Connecting to Certstream...\n", "yellow", attrs=["bold"]))
     certstream.listen_for_events(
         message_callback=callback,
-        url="wss://certstream.calidog.io",
+        url=args.ctl_server,
         on_open=on_open
     )
 
