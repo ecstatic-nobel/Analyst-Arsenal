@@ -10,7 +10,7 @@ With `aa_certstream`, find out when a phishing kit has been staged on a domain. 
 - Report  
 - Analyze  
 
-![aa_certstream](https://raw.githubusercontent.com/ecstatic-nobel/analyst_arsenal/master/static/assets/aa_certstream.gif)  
+![aa_certstream](https://raw.githubusercontent.com/ecstatic-nobel/Analyst-Arsenal/master/static/assets/aa_certstream.gif)  
 
 With `aa_urlscan`, easily search [urlscan.io](https://urlscan.io/) and check sites for malicious files based on predefined file extensions.  
 
@@ -27,8 +27,8 @@ With `aa_whoisds`, download a list of newly registered domains from [WHOIS Domai
 ### Setup  
 1. Open a terminal and run the following command:  
     ```bash  
-    git clone https://github.com/ecstatic-nobel/analyst_arsenal.git  
-    cd analyst_arsenal  
+    git clone https://github.com/ecstatic-nobel/Analyst-Arsenal.git  
+    cd Analyst-Arsenal  
     bash py_pkg_update.sh  
     ```  
 
