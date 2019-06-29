@@ -1,5 +1,5 @@
 # [Analyst Arsenal (A²)™]  
-##### Be the first to know on a need-to-know basis.  
+##### wget on Steriods  
 
 ### Description  
 With `aa_adhoc`, run through a list of URLs and check sites for malicious files based on predefined file extensions.  
