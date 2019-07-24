@@ -1,5 +1,5 @@
 # [Analyst Arsenal (A²)™]  
-##### wget on Steriods  
+##### Malicious Sh%t Scanner  
 
 ### Description  
 With `aa_adhoc`, run through a list of URLs and check sites for malicious files based on predefined file extensions.  
