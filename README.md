@@ -1,5 +1,5 @@
 # [Analyst Arsenal (A²)™]  
-##### Malicious Sh%t Scanner  
+##### A toolkit for Security Researchers    
 
 ### Description  
 With `aa_adhoc`, run through a list of URLs and check sites for malicious files based on predefined file extensions.  
